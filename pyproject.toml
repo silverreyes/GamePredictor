@@ -1,0 +1,28 @@
+[project]
+name = "nfl-game-predictor"
+version = "0.1.0"
+description = "NFL game outcome prediction with calibrated confidence scores"
+requires-python = ">=3.11"
+dependencies = [
+    "nflreadpy",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]",
+    "pandas>=2.0",
+    "polars",
+    "python-dotenv",
+    "click",
+    "tenacity",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
