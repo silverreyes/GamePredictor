@@ -84,3 +84,40 @@ CREATE INDEX IF NOT EXISTS idx_pbp_game_id ON raw_pbp (game_id);
 CREATE INDEX IF NOT EXISTS idx_pbp_posteam ON raw_pbp (posteam);
 CREATE INDEX IF NOT EXISTS idx_schedules_season ON schedules (season);
 CREATE INDEX IF NOT EXISTS idx_schedules_game_type ON schedules (game_type);
+
+-- Feature matrix: one row per regular-season game (home perspective)
+CREATE TABLE IF NOT EXISTS game_features (
+    game_id VARCHAR(20) PRIMARY KEY,
+    season SMALLINT NOT NULL,
+    week SMALLINT NOT NULL,
+    gameday DATE,
+
+    -- Teams
+    home_team VARCHAR(3) NOT NULL,
+    away_team VARCHAR(3) NOT NULL,
+
+    -- Target (not a feature)
+    home_win SMALLINT,  -- 1=home win, 0=away win, NULL=tie
+
+    -- Situational features (direct from schedule)
+    home_rest SMALLINT,
+    away_rest SMALLINT,
+    div_game SMALLINT,
+
+    -- Home team rolling features
+    home_rolling_off_epa REAL,
+    home_rolling_def_epa REAL,
+    home_rolling_point_diff REAL,
+    home_rolling_turnover_diff REAL,
+    home_rolling_win_rate REAL,
+
+    -- Away team rolling features
+    away_rolling_off_epa REAL,
+    away_rolling_def_epa REAL,
+    away_rolling_point_diff REAL,
+    away_rolling_turnover_diff REAL,
+    away_rolling_win_rate REAL
+);
+
+CREATE INDEX IF NOT EXISTS idx_game_features_season ON game_features (season);
+CREATE INDEX IF NOT EXISTS idx_game_features_week ON game_features (season, week);
