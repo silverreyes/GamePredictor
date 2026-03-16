@@ -21,7 +21,7 @@ Pre-game win/loss predictions with calibrated confidence scores that beat the Ve
 - [ ] Train a win/loss classifier (XGBoost), log all experiments to experiments.jsonl and MLflow
 - [ ] Model training uses an autoresearch-style experiment loop: agent reads program.md, picks next experiment, modifies only models/train.py, runs training, logs to experiments.jsonl, keeps or reverts based on 2023 validation accuracy
 - [ ] Temporal split: train 2005–2022, validate 2023, holdout test 2024
-- [ ] Beat benchmark of 53% accuracy on the 2023 validation season specifically (not training accuracy or aggregate accuracy)
+- [ ] Beat always-home baseline (~57%) and better-record baseline (~60%) on the 2023 validation season specifically (not training accuracy or aggregate accuracy)
 - [ ] Expose predictions via FastAPI endpoints (current week picks + historical results)
 - [ ] Display predictions dashboard: this week's games with predicted winner + confidence score
 - [ ] Display model scoreboard: historical experiment accuracy and comparison
@@ -50,8 +50,10 @@ Pre-game win/loss predictions with calibrated confidence scores that beat the Ve
 - **Data leakage**: All rolling features must use only data prior to the game being predicted — strictly enforced
 - **Temporal split**: Train 2005–2022, validate 2023, holdout 2024 — no shuffling across time boundaries
 - **Stack**: Python 3.11, PostgreSQL, nfl-data-py, pandas, scikit-learn, XGBoost, FastAPI, React, Docker Compose, MLflow
-- **Benchmark**: Must beat 53% accuracy on the **2023 validation season specifically** — training accuracy and overall accuracy do not count
+- **Benchmark**: Must beat always-home baseline (~57%) and better-record baseline (~60%) on the **2023 validation season specifically** — training accuracy and overall accuracy do not count
 - **Experiment loop**: Model training phase uses an autoresearch loop — agent reads program.md, selects next experiment, modifies only models/train.py, runs training, logs result to experiments.jsonl, keeps if 2023 val accuracy improves else reverts
+- **Feature schema**: One row per game (home team perspective) — home/away symmetry handled by feature design, not row duplication
+- **Team normalization**: Team abbreviation normalization (OAK→LV, SD→LAC, etc.) applied at ingestion — downstream code assumes clean abbreviations
 - **Deployment**: Docker Compose on Linux VPS — services must be containerized
 
 ## Key Decisions
