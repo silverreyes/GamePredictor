@@ -33,8 +33,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 01-01-PLAN.md — Project setup, Docker PostgreSQL, DB schema, constants, and test scaffolds
-- [ ] 01-02-PLAN.md — Ingestion pipeline with caching, upsert, validation, and integration tests
+- [x] 01-01-PLAN.md — Project setup, Docker PostgreSQL, DB schema, constants, and test scaffolds
+- [x] 01-02-PLAN.md — Ingestion pipeline with caching, upsert, validation, and integration tests
 
 ### Phase 2: Feature Engineering
 **Goal**: A game_features table exists with one row per game (home perspective) containing rolling offensive, defensive, and situational features computed with zero data leakage
@@ -45,11 +45,11 @@ Plans:
   2. Each row represents one game from the home team perspective with situational features (home/away flag, rest days, week number, divisional game flag) populated
   3. Automated leakage validation tests pass -- confirming no feature for game G uses data from game G or any later game -- and these tests block model training if they fail
   4. Feature matrix covers all seasons 2005-2024 with no gaps in coverage
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md — Feature definitions, build pipeline, DB schema, and unit tests
+- [ ] 02-02-PLAN.md — Leakage validation tests and CLI entry point
 
 ### Phase 3: Model Training and Autoresearch
 **Goal**: An XGBoost win/loss classifier achieves above 60% accuracy on the 2023 validation season, beating both trivial baselines, via a governed experiment loop with full logging
