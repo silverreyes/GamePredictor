@@ -105,18 +105,22 @@ CREATE TABLE IF NOT EXISTS game_features (
     div_game SMALLINT,
 
     -- Home team rolling features
-    home_rolling_off_epa REAL,
-    home_rolling_def_epa REAL,
+    home_rolling_off_epa_per_play REAL,
+    home_rolling_def_epa_per_play REAL,
     home_rolling_point_diff REAL,
+    home_rolling_turnovers_committed REAL,
+    home_rolling_turnovers_forced REAL,
     home_rolling_turnover_diff REAL,
-    home_rolling_win_rate REAL,
+    home_rolling_win REAL,
 
     -- Away team rolling features
-    away_rolling_off_epa REAL,
-    away_rolling_def_epa REAL,
+    away_rolling_off_epa_per_play REAL,
+    away_rolling_def_epa_per_play REAL,
     away_rolling_point_diff REAL,
+    away_rolling_turnovers_committed REAL,
+    away_rolling_turnovers_forced REAL,
     away_rolling_turnover_diff REAL,
-    away_rolling_win_rate REAL
+    away_rolling_win REAL
 );
 
 CREATE INDEX IF NOT EXISTS idx_game_features_season ON game_features (season);
