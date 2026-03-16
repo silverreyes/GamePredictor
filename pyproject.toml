@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "NFL game outcome prediction with calibrated confidence scores"
 requires-python = ">=3.11"
 dependencies = [
-    "nflreadpy",
+    "nfl-data-py",
     "sqlalchemy>=2.0",
     "psycopg[binary]",
     "pandas>=2.0",

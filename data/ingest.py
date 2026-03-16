@@ -16,13 +16,16 @@ from data.db import get_engine, get_table
 from data.validators import validate_game_count, print_validation_summary
 
 
-def upsert_dataframe(engine, table, df, conflict_columns, chunk_size=5000):
+def upsert_dataframe(engine, table, df, conflict_columns, chunk_size=1000):
     """Upsert DataFrame rows into PostgreSQL table in chunks.
 
     Uses PostgreSQL ON CONFLICT DO UPDATE for idempotent inserts.
     Processes in chunks to avoid memory issues with large DataFrames.
     """
-    records = df.to_dict(orient="records")
+    records = [
+        {k: None if isinstance(v, float) and pd.isna(v) else v for k, v in row.items()}
+        for row in df.to_dict(orient="records")
+    ]
     for i in range(0, len(records), chunk_size):
         chunk = records[i : i + chunk_size]
         stmt = pg_insert(table).values(chunk)
@@ -65,7 +68,7 @@ def _log_ingestion(engine, season, table_name, row_count, expected, actual, stat
 def ingest(seasons):
     """Ingest NFL play-by-play and schedule data into PostgreSQL.
 
-    Downloads data from nflreadpy, normalizes team abbreviations,
+    Downloads data from nfl_data_py, normalizes team abbreviations,
     filters preseason, and upserts into the database. Validates
     game counts after ingestion and exits non-zero on mismatch.
     """

@@ -20,7 +20,7 @@ def normalize_team_abbrev(abbrev: str) -> str:
 
 # Curated PBP columns (~35 columns from the 370+ available)
 CURATED_PBP_COLUMNS: list[str] = [
-    "play_id", "game_id", "old_game_id", "season", "season_type", "week", "game_date",
+    "play_id", "game_id", "season", "season_type", "week", "game_date",
     "home_team", "away_team", "posteam", "posteam_type", "defteam",
     "down", "ydstogo", "yardline_100", "quarter_seconds_remaining",
     "half_seconds_remaining", "game_seconds_remaining", "game_half",
@@ -44,7 +44,9 @@ CURATED_SCHEDULE_COLUMNS: list[str] = [
 
 # Expected regular season game counts per season (CONTEXT.md locked decision)
 # 256 games for 16-game seasons (2005-2020), 272 for 17-game seasons (2021-2024)
+# Exception: 2022 had 271 games (Bills-Bengals cancelled after Damar Hamlin injury)
 EXPECTED_REG_SEASON_GAMES: dict[int, int] = {
     year: 256 if year <= 2020 else 272
     for year in range(2005, 2025)
 }
+EXPECTED_REG_SEASON_GAMES[2022] = 271

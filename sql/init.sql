@@ -2,7 +2,6 @@
 CREATE TABLE IF NOT EXISTS raw_pbp (
     play_id INTEGER NOT NULL,
     game_id VARCHAR(20) NOT NULL,
-    old_game_id VARCHAR(20),
     season SMALLINT NOT NULL,
     season_type VARCHAR(4) NOT NULL,
     week SMALLINT NOT NULL,
