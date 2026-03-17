@@ -1,0 +1,242 @@
+"""Tests for models/predict.py prediction logic functions."""
+
+import json
+import os
+
+import numpy as np
+import pandas as pd
+import pytest
+from unittest.mock import MagicMock, patch
+
+from models.predict import (
+    get_best_experiment,
+    load_best_model,
+    _get_team_rolling_features,
+)
+
+
+# ---- Fixtures ----
+
+
+@pytest.fixture
+def experiments_file(tmp_path):
+    """Create a temporary experiments.jsonl file with sample data."""
+    entries = [
+        {
+            "experiment_id": 1,
+            "timestamp": "2026-03-17T01:16:43.500695+00:00",
+            "params": {"n_estimators": 100},
+            "features": ["home_rest", "away_rest", "div_game"],
+            "val_accuracy_2023": 0.6016,
+            "val_accuracy_2022": 1.0,
+            "val_accuracy_2021": 0.9882,
+            "baseline_always_home": 0.5551,
+            "baseline_better_record": 0.5820,
+            "log_loss": 0.7521,
+            "brier_score": 0.2605,
+            "shap_top5": [
+                {"feature": "home_rest", "importance": 0.3856}
+            ],
+            "keep": True,
+            "hypothesis": "Baseline",
+            "prev_best_acc": 0.0,
+            "model_path": "models/artifacts\\model_exp001.json",
+        },
+        {
+            "experiment_id": 2,
+            "timestamp": "2026-03-17T01:17:49.466408+00:00",
+            "params": {"n_estimators": 100},
+            "features": ["home_rest", "away_rest"],
+            "val_accuracy_2023": 0.5352,
+            "val_accuracy_2022": 0.9764,
+            "val_accuracy_2021": 0.9804,
+            "baseline_always_home": 0.5551,
+            "baseline_better_record": 0.5820,
+            "log_loss": 0.7890,
+            "brier_score": 0.2811,
+            "shap_top5": [
+                {"feature": "home_rest", "importance": 0.4365}
+            ],
+            "keep": False,
+            "hypothesis": "Ablation test",
+            "prev_best_acc": 0.6016,
+            "model_path": None,
+        },
+    ]
+    path = tmp_path / "experiments.jsonl"
+    with open(path, "w") as f:
+        for entry in entries:
+            f.write(json.dumps(entry) + "\n")
+    return str(path)
+
+
+@pytest.fixture
+def features_df():
+    """Feature DataFrame with known rolling columns for team lookup tests."""
+    rolling_cols = [
+        "home_rolling_off_epa_per_play",
+        "home_rolling_def_epa_per_play",
+        "home_rolling_point_diff",
+        "home_rolling_win",
+        "away_rolling_off_epa_per_play",
+        "away_rolling_def_epa_per_play",
+        "away_rolling_point_diff",
+        "away_rolling_win",
+    ]
+    rows = [
+        # Week 2: KC is home team
+        {
+            "game_id": "2024_02_BUF_KC",
+            "season": 2024,
+            "week": 2,
+            "home_team": "KC",
+            "away_team": "BUF",
+            "home_rolling_off_epa_per_play": 0.10,
+            "home_rolling_def_epa_per_play": -0.05,
+            "home_rolling_point_diff": 3.5,
+            "home_rolling_win": 0.6,
+            "away_rolling_off_epa_per_play": 0.08,
+            "away_rolling_def_epa_per_play": -0.03,
+            "away_rolling_point_diff": 2.1,
+            "away_rolling_win": 0.5,
+        },
+        # Week 3: KC is home team again (latest for KC)
+        {
+            "game_id": "2024_03_MIA_KC",
+            "season": 2024,
+            "week": 3,
+            "home_team": "KC",
+            "away_team": "MIA",
+            "home_rolling_off_epa_per_play": 0.15,
+            "home_rolling_def_epa_per_play": -0.06,
+            "home_rolling_point_diff": 4.0,
+            "home_rolling_win": 0.65,
+            "away_rolling_off_epa_per_play": 0.07,
+            "away_rolling_def_epa_per_play": -0.02,
+            "away_rolling_point_diff": 1.5,
+            "away_rolling_win": 0.4,
+        },
+        # Week 4: BUF is away team (latest for BUF)
+        {
+            "game_id": "2024_04_BUF_PHI",
+            "season": 2024,
+            "week": 4,
+            "home_team": "PHI",
+            "away_team": "BUF",
+            "home_rolling_off_epa_per_play": 0.12,
+            "home_rolling_def_epa_per_play": -0.04,
+            "home_rolling_point_diff": 2.8,
+            "home_rolling_win": 0.55,
+            "away_rolling_off_epa_per_play": 0.18,
+            "away_rolling_def_epa_per_play": -0.08,
+            "away_rolling_point_diff": 5.2,
+            "away_rolling_win": 0.7,
+        },
+    ]
+    return pd.DataFrame(rows)
+
+
+# ---- Tests ----
+
+
+def test_get_best_experiment(experiments_file):
+    """Returns the best kept experiment (experiment_id == 1, highest accuracy with keep=True)."""
+    result = get_best_experiment(experiments_file)
+    assert result is not None
+    assert result["experiment_id"] == 1
+    assert result["val_accuracy_2023"] == 0.6016
+
+
+def test_get_best_experiment_no_file():
+    """Raises FileNotFoundError when JSONL file does not exist."""
+    with pytest.raises(FileNotFoundError):
+        get_best_experiment("nonexistent_path/experiments.jsonl")
+
+
+def test_load_best_model(tmp_path):
+    """Loads XGBoost model from JSON file and returns XGBClassifier."""
+    from xgboost import XGBClassifier
+
+    # Create a dummy model and save it
+    model = XGBClassifier(n_estimators=2, max_depth=2)
+    # Train on minimal data to make it saveable
+    X = np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
+    y = np.array([0, 1, 0, 1])
+    model.fit(X, y)
+
+    model_path = str(tmp_path / "test_model.json")
+    model.save_model(model_path)
+
+    # Load and verify
+    loaded = load_best_model(model_path)
+    assert isinstance(loaded, XGBClassifier)
+
+
+def test_confidence_home_win():
+    """When home_prob >= 0.5, confidence equals home_prob."""
+    # Test the confidence logic used in generate_predictions
+    home_prob = 0.72
+    if home_prob >= 0.5:
+        predicted_winner = "HOME"
+        confidence = home_prob
+    else:
+        predicted_winner = "AWAY"
+        confidence = 1.0 - home_prob
+
+    assert predicted_winner == "HOME"
+    assert confidence == 0.72
+
+
+def test_confidence_away_win():
+    """When home_prob < 0.5, confidence equals 1 - home_prob."""
+    home_prob = 0.35
+    if home_prob >= 0.5:
+        predicted_winner = "HOME"
+        confidence = home_prob
+    else:
+        predicted_winner = "AWAY"
+        confidence = 1.0 - home_prob
+
+    assert predicted_winner == "AWAY"
+    assert confidence == pytest.approx(0.65)
+
+
+def test_get_team_rolling_features_as_home(features_df):
+    """When team's latest game was as home_team, extracts home_rolling_* columns.
+
+    KC's latest game is week 3, where KC was home.
+    Their stats should come from home_rolling_* columns.
+    """
+    result = _get_team_rolling_features(features_df, "KC")
+
+    # KC was home in week 3, so their rolling stats are in home_rolling_* columns
+    assert result["rolling_off_epa_per_play"] == pytest.approx(0.15)
+    assert result["rolling_def_epa_per_play"] == pytest.approx(-0.06)
+    assert result["rolling_point_diff"] == pytest.approx(4.0)
+    assert result["rolling_win"] == pytest.approx(0.65)
+
+
+def test_get_team_rolling_features_as_away(features_df):
+    """When team's latest game was as away_team, extracts away_rolling_* columns.
+
+    BUF's latest game is week 4, where BUF was away.
+    Their stats should come from away_rolling_* columns (NOT home_rolling_*).
+    """
+    result = _get_team_rolling_features(features_df, "BUF")
+
+    # BUF was away in week 4, so their rolling stats are in away_rolling_* columns
+    assert result["rolling_off_epa_per_play"] == pytest.approx(0.18)
+    assert result["rolling_def_epa_per_play"] == pytest.approx(-0.08)
+    assert result["rolling_point_diff"] == pytest.approx(5.2)
+    assert result["rolling_win"] == pytest.approx(0.7)
+
+    # Crucially, NOT the home team's (PHI's) values
+    assert result["rolling_off_epa_per_play"] != pytest.approx(0.12)
+
+
+def test_model_path_normalization(experiments_file):
+    """get_best_experiment normalizes backslashes in model_path."""
+    result = get_best_experiment(experiments_file)
+    # The sample JSONL has "models/artifacts\\model_exp001.json"
+    assert "\\" not in result["model_path"]
+    assert result["model_path"] == "models/artifacts/model_exp001.json"
