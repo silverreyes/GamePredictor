@@ -93,11 +93,11 @@ Plans:
   2. Dashboard shows season accuracy summary comparing model record against always-home and better-record baselines for the current season
   3. Dashboard shows experiment scoreboard listing all logged experiments with 2023 validation accuracy, key parameters, and keep/revert status
   4. Dashboard shows historical predictions log with actual outcomes and clear correct/incorrect visual indicators
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md — Scaffold React + Vite + shadcn/ui project, TypeScript types, API client, TanStack Query hooks, sidebar layout, and shared components
+- [ ] 05-02-PLAN.md — Build all 4 page views (This Week's Picks, Season Accuracy, Experiment Scoreboard, Prediction History) and visual verification
 
 ### Phase 6: Pipeline and Deployment
 **Goal**: The full system runs in Docker Compose on a Linux VPS with automated weekly data refresh and a human approval gate before model deployment
