@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-17T02:18:37.650Z"
-last_activity: 2026-03-17 — Phase 3 complete (03-03 checkpoint verified, 62.89% accuracy)
+status: executing
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-17T05:44:02.000Z"
+last_activity: 2026-03-17 — Phase 4 plan 01 complete (prediction pipeline + API contracts)
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_plans: 10
+  completed_plans: 9
+  percent: 90
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Pre-game win/loss predictions with calibrated confidence scores that beat trivial baselines on the 2023 validation season
-**Current focus:** Phase 3: Model Training and Autoresearch (COMPLETE)
+**Current focus:** Phase 4: Prediction API (IN PROGRESS)
 
 ## Current Position
 
-Phase: 3 of 6 (Model Training and Autoresearch) -- PHASE COMPLETE
-Plan: 3 of 3 in current phase (COMPLETE, checkpoint verified)
-Status: Phase 3 complete. Ready for Phase 4 planning.
-Last activity: 2026-03-17 — Phase 3 complete (03-03 checkpoint verified, 62.89% accuracy)
+Phase: 4 of 6 (Prediction API)
+Plan: 1 of 2 in current phase (COMPLETE)
+Status: Plan 04-01 complete. Ready for 04-02 (FastAPI endpoints).
+Last activity: 2026-03-17 — Phase 4 plan 01 complete (prediction pipeline + API contracts)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 4.9min
-- Total execution time: 0.65 hours
+- Total plans completed: 9
+- Average duration: 4.6min
+- Total execution time: 0.7 hours
 
 **By Phase:**
 
@@ -46,9 +46,10 @@ Progress: [██████████] 100%
 | 01-data-foundation | 2 | 8min | 4min |
 | 02-feature-engineering | 3 | 10min | 3.3min |
 | 03-model-training-and-autoresearch | 3 | 21min | 7min |
+| 04-prediction-api | 1 | 3min | 3min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (3min), 02-03 (1min), 03-01 (7min), 03-02 (5min), 03-03 (9min)
+- Last 5 plans: 02-03 (1min), 03-01 (7min), 03-02 (5min), 03-03 (9min), 04-01 (3min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -81,6 +82,10 @@ Recent decisions affecting current work:
 - [Phase 03]: Full 17-feature set is near-optimal -- all ablation experiments hurt accuracy
 - [Phase 03]: Lower learning rate (0.1) + early stopping is the biggest improvement lever for generalization
 - [Phase 03]: Experiment 1 always kept unconditionally as initial baseline (no prior best to compare)
+- [Phase 04]: Confidence tier thresholds default to 0.65 (high) and 0.55 (medium), configurable via env vars
+- [Phase 04]: predictions table uses game_id as sole PK (no model versioning per CONTEXT.md)
+- [Phase 04]: model_path backslash normalization in get_best_experiment for cross-platform compatibility
+- [Phase 04]: _get_team_rolling_features returns unprefixed keys, caller re-prefixes for home/away slot
 
 ### Pending Todos
 
@@ -94,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T02:18:37.647Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-prediction-api/04-CONTEXT.md
+Last session: 2026-03-17T05:44:02.000Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: .planning/phases/04-prediction-api/04-02-PLAN.md

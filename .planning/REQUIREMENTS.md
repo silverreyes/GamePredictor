@@ -32,10 +32,10 @@
 
 ### Prediction API
 
-- [ ] **API-01**: GET /predictions/week/{week} returns predicted winner and confidence score per game for the specified week
-- [ ] **API-02**: GET /predictions/history returns all past predictions with actual outcomes
-- [ ] **API-03**: GET /model/info returns current model version, training date, and 2023 validation accuracy
-- [ ] **API-04**: POST /model/reload hot-swaps the serving model after manual approval of a new version
+- [x] **API-01**: GET /predictions/week/{week} returns predicted winner and confidence score per game for the specified week
+- [x] **API-02**: GET /predictions/history returns all past predictions with actual outcomes
+- [x] **API-03**: GET /model/info returns current model version, training date, and 2023 validation accuracy
+- [x] **API-04**: POST /model/reload hot-swaps the serving model after manual approval of a new version
 
 ### Dashboard
 
@@ -101,10 +101,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MODL-05 | Phase 3 | Complete |
 | MODL-06 | Phase 3 | Complete |
 | MODL-07 | Phase 3 | Complete |
-| API-01 | Phase 4 | Pending |
-| API-02 | Phase 4 | Pending |
-| API-03 | Phase 4 | Pending |
-| API-04 | Phase 4 | Pending |
+| API-01 | Phase 4 | Complete |
+| API-02 | Phase 4 | Complete |
+| API-03 | Phase 4 | Complete |
+| API-04 | Phase 4 | Complete |
 | DASH-01 | Phase 5 | Pending |
 | DASH-02 | Phase 5 | Pending |
 | DASH-03 | Phase 5 | Pending |
