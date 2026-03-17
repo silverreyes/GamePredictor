@@ -78,10 +78,11 @@ Plans:
   2. GET /predictions/history returns all past predictions paired with actual outcomes
   3. GET /model/info returns the current model version, training date, and 2023 validation accuracy
   4. POST /model/reload hot-swaps the serving model to a newly staged version without restarting the server
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 04-01: TBD
+- [ ] 04-01-PLAN.md — Prediction pipeline (predict.py), DB schema (predictions table), and API contracts (schemas, config)
+- [ ] 04-02-PLAN.md — FastAPI application with all endpoints, test suite, and human verification
 
 ### Phase 5: Dashboard
 **Goal**: Users can view this week's predictions, track model performance against baselines, compare experiments, and review prediction history through a React dashboard
@@ -123,6 +124,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Data Foundation | 2/2 | Complete   | 2026-03-16 |
 | 2. Feature Engineering | 3/3 | Complete | 2026-03-16 |
 | 3. Model Training and Autoresearch | 3/3 | Complete   | 2026-03-17 |
-| 4. Prediction API | 0/1 | Not started | - |
+| 4. Prediction API | 0/2 | Not started | - |
 | 5. Dashboard | 0/2 | Not started | - |
 | 6. Pipeline and Deployment | 0/2 | Not started | - |
