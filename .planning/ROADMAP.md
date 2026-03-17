@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Feature Engineering** - Compute leakage-safe game-level features with automated temporal validation (completed 2026-03-16)
 - [x] **Phase 3: Model Training and Autoresearch** - Train XGBoost classifier via experiment loop, beating trivial baselines on 2023 validation (completed 2026-03-17)
 - [x] **Phase 4: Prediction API** - Serve predictions and model metadata via FastAPI endpoints (completed 2026-03-17)
-- [ ] **Phase 5: Dashboard** - Display weekly picks, season accuracy, experiment scoreboard, and prediction history
+- [x] **Phase 5: Dashboard** - Display weekly picks, season accuracy, experiment scoreboard, and prediction history (completed 2026-03-17)
 - [ ] **Phase 6: Pipeline and Deployment** - Automate weekly refresh and deploy full stack via Docker Compose
 
 ## Phase Details
@@ -93,11 +93,11 @@ Plans:
   2. Dashboard shows season accuracy summary comparing model record against always-home and better-record baselines for the current season
   3. Dashboard shows experiment scoreboard listing all logged experiments with 2023 validation accuracy, key parameters, and keep/revert status
   4. Dashboard shows historical predictions log with actual outcomes and clear correct/incorrect visual indicators
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 05-01-PLAN.md — Scaffold React + Vite + shadcn/ui project, TypeScript types, API client, TanStack Query hooks, sidebar layout, and shared components
-- [ ] 05-02-PLAN.md — Build all 4 page views (This Week's Picks, Season Accuracy, Experiment Scoreboard, Prediction History) and visual verification
+- [x] 05-02-PLAN.md — Build all 4 page views (This Week's Picks, Season Accuracy, Experiment Scoreboard, Prediction History) and visual verification
 
 ### Phase 6: Pipeline and Deployment
 **Goal**: The full system runs in Docker Compose on a Linux VPS with automated weekly data refresh and a human approval gate before model deployment
@@ -125,5 +125,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Feature Engineering | 3/3 | Complete | 2026-03-16 |
 | 3. Model Training and Autoresearch | 3/3 | Complete   | 2026-03-17 |
 | 4. Prediction API | 2/2 | Complete | 2026-03-17 |
-| 5. Dashboard | 1/2 | In progress | - |
+| 5. Dashboard | 2/2 | Complete | 2026-03-17 |
 | 6. Pipeline and Deployment | 0/2 | Not started | - |

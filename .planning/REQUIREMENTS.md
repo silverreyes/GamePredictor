@@ -39,10 +39,10 @@
 
 ### Dashboard
 
-- [ ] **DASH-01**: Dashboard displays this week's games with predicted winner, win probability, and confidence tier (high/medium/low)
-- [ ] **DASH-02**: Dashboard displays season accuracy summary: model record vs always-home and better-record baselines for the current season
-- [ ] **DASH-03**: Dashboard displays experiment scoreboard: all logged experiments with 2023 val accuracy, key params, and keep/revert status
-- [ ] **DASH-04**: Dashboard displays historical predictions log: all past predictions with actual outcome and correct/incorrect highlight
+- [x] **DASH-01**: Dashboard displays this week's games with predicted winner, win probability, and confidence tier (high/medium/low)
+- [x] **DASH-02**: Dashboard displays season accuracy summary: model record vs always-home and better-record baselines for the current season
+- [x] **DASH-03**: Dashboard displays experiment scoreboard: all logged experiments with 2023 val accuracy, key params, and keep/revert status
+- [x] **DASH-04**: Dashboard displays historical predictions log: all past predictions with actual outcome and correct/incorrect highlight
 
 ### Pipeline & Deployment
 
@@ -105,10 +105,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | API-02 | Phase 4 | Complete |
 | API-03 | Phase 4 | Complete |
 | API-04 | Phase 4 | Complete |
-| DASH-01 | Phase 5 | Pending |
-| DASH-02 | Phase 5 | Pending |
-| DASH-03 | Phase 5 | Pending |
-| DASH-04 | Phase 5 | Pending |
+| DASH-01 | Phase 5 | Complete |
+| DASH-02 | Phase 5 | Complete |
+| DASH-03 | Phase 5 | Complete |
+| DASH-04 | Phase 5 | Complete |
 | PIPE-01 | Phase 6 | Pending |
 | PIPE-02 | Phase 6 | Pending |
 | PIPE-03 | Phase 6 | Pending |
