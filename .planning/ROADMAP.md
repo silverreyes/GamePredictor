@@ -96,7 +96,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Scaffold React + Vite + shadcn/ui project, TypeScript types, API client, TanStack Query hooks, sidebar layout, and shared components
+- [x] 05-01-PLAN.md — Scaffold React + Vite + shadcn/ui project, TypeScript types, API client, TanStack Query hooks, sidebar layout, and shared components
 - [ ] 05-02-PLAN.md — Build all 4 page views (This Week's Picks, Season Accuracy, Experiment Scoreboard, Prediction History) and visual verification
 
 ### Phase 6: Pipeline and Deployment
@@ -125,5 +125,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Feature Engineering | 3/3 | Complete | 2026-03-16 |
 | 3. Model Training and Autoresearch | 3/3 | Complete   | 2026-03-17 |
 | 4. Prediction API | 2/2 | Complete | 2026-03-17 |
-| 5. Dashboard | 0/2 | Not started | - |
+| 5. Dashboard | 1/2 | In progress | - |
 | 6. Pipeline and Deployment | 0/2 | Not started | - |
