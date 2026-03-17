@@ -348,9 +348,14 @@ DEFAULT_PARAMS = {
 }
 
 # Current experiment configuration (modified per experiment)
-EXPERIMENT_ID = 1
-EXPERIMENT_PARAMS = {**DEFAULT_PARAMS}
-EXPERIMENT_HYPOTHESIS = "Establish baseline accuracy with default XGBoost on full feature set"
+EXPERIMENT_ID = 5
+EXPERIMENT_PARAMS = {
+    **DEFAULT_PARAMS,
+    "learning_rate": 0.1,
+    "n_estimators": 300,
+    "early_stopping_rounds": 20,
+}
+EXPERIMENT_HYPOTHESIS = "Slower learning with more trees and early stopping prevents overfitting on small dataset"
 DROP_FEATURES = []  # Feature columns to exclude from training
 
 
