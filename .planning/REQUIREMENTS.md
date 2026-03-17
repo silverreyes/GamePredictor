@@ -26,8 +26,8 @@
 - [x] **MODL-02**: Every training run logs params, 2023 validation accuracy, and model artifact path to experiments.jsonl and MLflow
 - [x] **MODL-03**: Every training run logs trivial baseline accuracies (always-home-team wins, better-season-record wins) on the 2023 validation season alongside model accuracy — from experiment #1 onward
 - [x] **MODL-04**: Every training run logs validation accuracy on 2021 and 2022 seasons in addition to 2023 — for overfitting detection only; keep/revert decisions are based on 2023 accuracy exclusively
-- [ ] **MODL-05**: Autoresearch experiment loop: agent reads models/program.md, selects next experiment, modifies only models/train.py, runs training, keeps if 2023 val accuracy improves over previous best, reverts otherwise
-- [ ] **MODL-06**: Model must beat both trivial baselines (always-home ~57%, better-record ~60%) on the 2023 validation season before being considered production-ready
+- [x] **MODL-05**: Autoresearch experiment loop: agent reads models/program.md, selects next experiment, modifies only models/train.py, runs training, keeps if 2023 val accuracy improves over previous best, reverts otherwise
+- [x] **MODL-06**: Model must beat both trivial baselines (always-home ~57%, better-record ~60%) on the 2023 validation season before being considered production-ready
 - [x] **MODL-07**: TreeSHAP feature importance is computed post-training and logged as a summary to experiments.jsonl — not computed at inference time
 
 ### Prediction API
@@ -98,8 +98,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MODL-02 | Phase 3 | Complete |
 | MODL-03 | Phase 3 | Complete |
 | MODL-04 | Phase 3 | Complete |
-| MODL-05 | Phase 3 | Pending |
-| MODL-06 | Phase 3 | Pending |
+| MODL-05 | Phase 3 | Complete |
+| MODL-06 | Phase 3 | Complete |
 | MODL-07 | Phase 3 | Complete |
 | API-01 | Phase 4 | Pending |
 | API-02 | Phase 4 | Pending |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-17T01:08:46.000Z"
-last_activity: 2026-03-17 — Completed 03-02-PLAN.md (training pipeline + tests)
+stopped_at: Completed 03-03-PLAN.md (awaiting checkpoint verification)
+last_updated: "2026-03-17T01:22:37.000Z"
+last_activity: 2026-03-17 — Completed 03-03-PLAN.md (autoresearch loop, 62.89% accuracy)
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
-  percent: 88
+  completed_plans: 8
+  percent: 100
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Pre-game win/loss predictions with calibrated confidence scores that beat trivial baselines on the 2023 validation season
-**Current focus:** Phase 3: Model Training and Autoresearch
+**Current focus:** Phase 3: Model Training and Autoresearch (COMPLETE, awaiting checkpoint verification)
 
 ## Current Position
 
-Phase: 3 of 6 (Model Training and Autoresearch)
-Plan: 2 of 3 in current phase (COMPLETE)
-Status: 03-02-PLAN complete, ready for 03-03-PLAN
-Last activity: 2026-03-17 — Completed 03-02-PLAN.md (training pipeline + tests)
+Phase: 3 of 6 (Model Training and Autoresearch) -- ALL PLANS COMPLETE
+Plan: 3 of 3 in current phase (COMPLETE, checkpoint pending)
+Status: 03-03-PLAN complete, awaiting human verification of experiment results
+Last activity: 2026-03-17 — Completed 03-03-PLAN.md (autoresearch loop, 62.89% accuracy)
 
-Progress: [████████░░] 88%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 4.3min
-- Total execution time: 0.50 hours
+- Total plans completed: 8
+- Average duration: 4.9min
+- Total execution time: 0.65 hours
 
 **By Phase:**
 
@@ -45,10 +45,10 @@ Progress: [████████░░] 88%
 |-------|-------|-------|----------|
 | 01-data-foundation | 2 | 8min | 4min |
 | 02-feature-engineering | 3 | 10min | 3.3min |
-| 03-model-training-and-autoresearch | 2 | 12min | 6min |
+| 03-model-training-and-autoresearch | 3 | 21min | 7min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (6min), 02-02 (3min), 02-03 (1min), 03-01 (7min), 03-02 (5min)
+- Last 5 plans: 02-02 (3min), 02-03 (1min), 03-01 (7min), 03-02 (5min), 03-03 (9min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -78,6 +78,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Prior-season lookup uses home perspective first, fills from away perspective only if not already set
 - [Phase 03]: In-sample 2021/2022 evaluation documented as NOT held-out; training includes all 2005-2022
 - [Phase 03]: log_experiment accepts optional jsonl_path parameter for testability
+- [Phase 03]: Full 17-feature set is near-optimal -- all ablation experiments hurt accuracy
+- [Phase 03]: Lower learning rate (0.1) + early stopping is the biggest improvement lever for generalization
+- [Phase 03]: Experiment 1 always kept unconditionally as initial baseline (no prior best to compare)
 
 ### Pending Todos
 
@@ -91,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T01:08:46.000Z
-Stopped at: Completed 03-02-PLAN.md
-Resume file: .planning/phases/03-model-training-and-autoresearch/03-03-PLAN.md
+Last session: 2026-03-17T01:22:37.000Z
+Stopped at: Completed 03-03-PLAN.md (awaiting checkpoint verification)
+Resume file: .planning/phases/03-model-training-and-autoresearch/03-03-PLAN.md (Task 3 checkpoint)
