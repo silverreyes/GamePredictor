@@ -328,3 +328,152 @@ def should_keep(
         return True
 
     return False
+
+
+# ---------------------------------------------------------------------------
+# Experiment runner entry point
+# ---------------------------------------------------------------------------
+
+# Default XGBoost parameters (Experiment 1 baseline)
+DEFAULT_PARAMS = {
+    "n_estimators": 100,
+    "max_depth": 6,
+    "learning_rate": 0.3,
+    "subsample": 1.0,
+    "colsample_bytree": 1.0,
+    "reg_alpha": 0,
+    "reg_lambda": 1,
+    "min_child_weight": 1,
+    "gamma": 0,
+}
+
+# Current experiment configuration (modified per experiment)
+EXPERIMENT_ID = 1
+EXPERIMENT_PARAMS = {**DEFAULT_PARAMS}
+EXPERIMENT_HYPOTHESIS = "Establish baseline accuracy with default XGBoost on full feature set"
+DROP_FEATURES = []  # Feature columns to exclude from training
+
+
+def run_experiment():
+    """Orchestrate a single experiment: load, split, train, evaluate, log, save.
+
+    Reads configuration from module-level variables:
+        EXPERIMENT_ID, EXPERIMENT_PARAMS, EXPERIMENT_HYPOTHESIS, DROP_FEATURES
+
+    Returns:
+        Tuple of (results_dict, model, keep_decision) for caller inspection.
+    """
+    from features.build import build_game_features
+    from models.baselines import compute_baselines
+
+    # Setup
+    setup_mlflow()
+
+    # Load and split
+    print(f"\n{'='*60}")
+    print(f"EXPERIMENT {EXPERIMENT_ID}: {EXPERIMENT_HYPOTHESIS}")
+    print(f"{'='*60}\n")
+
+    df = build_game_features()
+    train, val_2023, val_2022, val_2021, feature_cols = load_and_split(df)
+
+    # Apply feature drops if specified
+    active_features = [c for c in feature_cols if c not in DROP_FEATURES]
+    if DROP_FEATURES:
+        print(f"Dropped features: {DROP_FEATURES}")
+        print(f"Active features: {len(active_features)} (was {len(feature_cols)})")
+
+    # Prepare X/y splits
+    X_train = train[active_features]
+    y_train = train[TARGET]
+    X_val_2023 = val_2023[active_features]
+    y_val_2023 = val_2023[TARGET]
+    X_val_2022 = val_2022[active_features]
+    y_val_2022 = val_2022[TARGET]
+    X_val_2021 = val_2021[active_features]
+    y_val_2021 = val_2021[TARGET]
+
+    # Train and evaluate
+    results, model = train_and_evaluate(
+        X_train, y_train,
+        X_val_2023, y_val_2023,
+        X_val_2022, y_val_2022,
+        X_val_2021, y_val_2021,
+        EXPERIMENT_PARAMS,
+    )
+
+    # Compute baselines
+    baselines = compute_baselines(df, 2023)
+    baseline_home = baselines["always_home_accuracy"]
+    baseline_record = baselines["better_record_accuracy"]
+
+    # Load previous best from experiments.jsonl
+    prev_best_acc = 0.0
+    prev_best_log_loss = float("inf")
+    jsonl_path = "models/experiments.jsonl"
+    if os.path.exists(jsonl_path):
+        with open(jsonl_path) as f:
+            for line in f:
+                entry = json.loads(line)
+                if entry["keep"] and entry["val_accuracy_2023"] > prev_best_acc:
+                    prev_best_acc = entry["val_accuracy_2023"]
+                    prev_best_log_loss = entry["log_loss"]
+
+    # Keep/revert decision
+    keep = should_keep(
+        results["val_accuracy_2023"], prev_best_acc,
+        results["log_loss"], prev_best_log_loss,
+    )
+
+    # For experiment 1 (no previous best), always keep if above baseline
+    if EXPERIMENT_ID == 1:
+        keep = True
+
+    # Save model if keeping
+    model_path = None
+    if keep:
+        model_path = save_model(model, EXPERIMENT_ID)
+        save_best_model(model)
+
+    # Log experiment (always, regardless of keep/revert)
+    log_experiment(
+        experiment_id=EXPERIMENT_ID,
+        params=EXPERIMENT_PARAMS,
+        features_used=active_features,
+        val_acc_2023=results["val_accuracy_2023"],
+        val_acc_2022=results["val_accuracy_2022"],
+        val_acc_2021=results["val_accuracy_2021"],
+        baseline_home=baseline_home,
+        baseline_record=baseline_record,
+        log_loss_val=results["log_loss"],
+        brier_score_val=results["brier_score"],
+        shap_top5=results["shap_top5"],
+        keep=keep,
+        hypothesis=EXPERIMENT_HYPOTHESIS,
+        prev_best_acc=prev_best_acc,
+        model_path=model_path,
+    )
+
+    # Print results
+    print(f"\n{'='*60}")
+    print(f"RESULTS - Experiment {EXPERIMENT_ID}")
+    print(f"{'='*60}")
+    print(f"  2023 accuracy: {results['val_accuracy_2023']:.4f}")
+    print(f"  2022 accuracy: {results['val_accuracy_2022']:.4f}")
+    print(f"  2021 accuracy: {results['val_accuracy_2021']:.4f}")
+    print(f"  Log loss:      {results['log_loss']:.4f}")
+    print(f"  Brier score:   {results['brier_score']:.4f}")
+    print(f"  Always-home:   {baseline_home:.4f}")
+    print(f"  Better-record: {baseline_record:.4f}")
+    print(f"  Prev best acc: {prev_best_acc:.4f}")
+    print(f"  SHAP top-5:    {results['shap_top5']}")
+    print(f"  Decision:      {'KEEP' if keep else 'REVERT'}")
+    if model_path:
+        print(f"  Model saved:   {model_path}")
+    print(f"{'='*60}\n")
+
+    return results, model, keep
+
+
+if __name__ == "__main__":
+    run_experiment()
