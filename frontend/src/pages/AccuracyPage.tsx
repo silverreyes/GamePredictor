@@ -84,6 +84,19 @@ export function AccuracyPage() {
 
   if (!historyQuery.data || !modelQuery.data) return null;
 
+  // Empty state: API succeeded but no predictions exist yet
+  if (historyQuery.data.predictions.length === 0) {
+    return (
+      <div>
+        <h1 className="text-xl font-semibold mb-8">Season Accuracy</h1>
+        <ErrorState
+          heading="No Predictions Yet"
+          body="No predictions have been generated yet. Run predict_week.py to generate predictions, then check back here to see accuracy stats."
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <h1 className="text-xl font-semibold mb-8">Season Accuracy</h1>
