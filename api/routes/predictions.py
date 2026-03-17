@@ -126,12 +126,17 @@ async def get_prediction_history(
     """
     engine = state["engine"]
 
-    # Default season = current season
+    # Default season = most recent season with predictions
     if season is None:
         result = pd.read_sql(
-            "SELECT MAX(season) as max_season FROM schedules WHERE game_type = 'REG'",
+            "SELECT MAX(season) as max_season FROM predictions",
             engine,
         )
+        if result["max_season"].iloc[0] is None:
+            return PredictionHistoryResponse(
+                predictions=[],
+                summary=HistorySummary(correct=0, total=0, accuracy=None),
+            )
         season = int(result["max_season"].iloc[0])
 
     # Build query with optional team filter
