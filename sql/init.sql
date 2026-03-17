@@ -125,3 +125,22 @@ CREATE TABLE IF NOT EXISTS game_features (
 
 CREATE INDEX IF NOT EXISTS idx_game_features_season ON game_features (season);
 CREATE INDEX IF NOT EXISTS idx_game_features_week ON game_features (season, week);
+
+-- Predictions: pre-computed game predictions (one per game, no model versioning)
+CREATE TABLE IF NOT EXISTS predictions (
+    game_id VARCHAR(20) PRIMARY KEY,
+    season SMALLINT NOT NULL,
+    week SMALLINT NOT NULL,
+    game_date DATE,
+    home_team VARCHAR(3) NOT NULL,
+    away_team VARCHAR(3) NOT NULL,
+    predicted_winner VARCHAR(3) NOT NULL,
+    confidence REAL NOT NULL,
+    confidence_tier VARCHAR(6) NOT NULL,
+    model_id INTEGER,
+    actual_winner VARCHAR(3),
+    correct BOOLEAN
+);
+
+CREATE INDEX IF NOT EXISTS idx_predictions_season_week ON predictions (season, week);
+CREATE INDEX IF NOT EXISTS idx_predictions_season ON predictions (season);
