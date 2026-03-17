@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-16T23:35:45.132Z"
-last_activity: 2026-03-16 — Completed 02-03-PLAN.md (Phase 2 DDL fix complete)
+status: in-progress
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-17T00:59:14.000Z"
+last_activity: 2026-03-17 — Completed 03-01-PLAN.md (ML deps + baselines module)
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
+  total_plans: 8
+  completed_plans: 6
+  percent: 75
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Pre-game win/loss predictions with calibrated confidence scores that beat trivial baselines on the 2023 validation season
-**Current focus:** Phase 2: Feature Engineering (COMPLETE)
+**Current focus:** Phase 3: Model Training and Autoresearch
 
 ## Current Position
 
-Phase: 2 of 6 (Feature Engineering) -- COMPLETE
-Plan: 3 of 3 in current phase
-Status: Phase 2 complete (including DDL fix), ready for Phase 3
-Last activity: 2026-03-16 — Completed 02-03-PLAN.md (Phase 2 DDL fix complete)
+Phase: 3 of 6 (Model Training and Autoresearch)
+Plan: 1 of 3 in current phase (COMPLETE)
+Status: 03-01-PLAN complete, ready for 03-02-PLAN
+Last activity: 2026-03-17 — Completed 03-01-PLAN.md (ML deps + baselines module)
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 75%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 3.6min
-- Total execution time: 0.30 hours
+- Total plans completed: 6
+- Average duration: 4.2min
+- Total execution time: 0.42 hours
 
 **By Phase:**
 
@@ -45,9 +45,10 @@ Progress: [██████████] 100%
 |-------|-------|-------|----------|
 | 01-data-foundation | 2 | 8min | 4min |
 | 02-feature-engineering | 3 | 10min | 3.3min |
+| 03-model-training-and-autoresearch | 1 | 7min | 7min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (4min), 01-02 (4min), 02-01 (6min), 02-02 (3min), 02-03 (1min)
+- Last 5 plans: 01-02 (4min), 02-01 (6min), 02-02 (3min), 02-03 (1min), 03-01 (7min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -73,6 +74,8 @@ Recent decisions affecting current work:
 - [Phase 02]: 6 leakage tests (not 5) -- added monotonic information test for expanding window correctness
 - [Phase 02]: CLI defaults to dry run (--no-store) for safety
 - [Phase 02]: DDL column order follows pipeline rolling_cols list order for consistency
+- [Phase 03]: Upgraded pandas 1.5.3 to 2.3.3 for numpy 2.x compatibility (required by ML deps)
+- [Phase 03]: Prior-season lookup uses home perspective first, fills from away perspective only if not already set
 
 ### Pending Todos
 
@@ -86,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T23:35:45.129Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-model-training-and-autoresearch/03-CONTEXT.md
+Last session: 2026-03-17T00:59:14.000Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: .planning/phases/03-model-training-and-autoresearch/03-02-PLAN.md
