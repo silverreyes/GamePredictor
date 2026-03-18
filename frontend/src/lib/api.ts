@@ -7,10 +7,25 @@ import type {
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+
+  /** True when the server is up but has no model/data yet (503, 404). */
+  get isNotReady() {
+    return this.status === 503 || this.status === 404;
+  }
+}
+
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(API_BASE + path);
   if (!res.ok) {
-    throw new Error(`API error: ${res.status} ${res.statusText}`);
+    throw new ApiError(res.status, `API error: ${res.status} ${res.statusText}`);
   }
   return res.json() as Promise<T>;
 }

@@ -4,6 +4,7 @@ import { usePredictionHistory } from "@/hooks/usePredictionHistory";
 import { HistoryFilters } from "@/components/history/HistoryFilters";
 import { HistoryTable } from "@/components/history/HistoryTable";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { ApiError } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function HistoryPage() {
@@ -14,7 +15,7 @@ export function HistoryPage() {
     : undefined;
   const team = searchParams.get("team") ?? undefined;
 
-  const { data, isLoading, isError, refetch } = usePredictionHistory(
+  const { data, isLoading, isError, error, refetch } = usePredictionHistory(
     season,
     team
   );
@@ -77,10 +78,15 @@ export function HistoryPage() {
   }
 
   if (isError) {
+    const notReady = error instanceof ApiError && error.isNotReady;
     return (
       <ErrorState
-        heading="Connection Failed"
-        body="Could not reach the prediction API. Make sure the server is running on localhost:8000."
+        heading={notReady ? "No Model Trained Yet" : "Connection Failed"}
+        body={
+          notReady
+            ? "Train a model and call POST /api/model/reload to see prediction history."
+            : "Could not reach the prediction API. Make sure the server is running."
+        }
         onRetry={() => refetch()}
       />
     );

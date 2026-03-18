@@ -3,10 +3,11 @@ import { Link } from "react-router";
 import { useCurrentPredictions } from "@/hooks/useCurrentPredictions";
 import { PicksGrid } from "@/components/picks/PicksGrid";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { ApiError } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function ThisWeekPage() {
-  const { data, isLoading, isError, refetch } = useCurrentPredictions();
+  const { data, isLoading, isError, error, refetch } = useCurrentPredictions();
 
   useEffect(() => {
     if (data) {
@@ -28,10 +29,15 @@ export function ThisWeekPage() {
   }
 
   if (isError) {
+    const notReady = error instanceof ApiError && error.isNotReady;
     return (
       <ErrorState
-        heading="Connection Failed"
-        body="Could not reach the prediction API. Make sure the server is running on localhost:8000."
+        heading={notReady ? "No Model Trained Yet" : "Connection Failed"}
+        body={
+          notReady
+            ? "Train a model and call POST /api/model/reload to generate predictions."
+            : "Could not reach the prediction API. Make sure the server is running."
+        }
         onRetry={() => refetch()}
       />
     );

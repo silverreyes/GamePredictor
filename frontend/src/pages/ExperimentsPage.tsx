@@ -2,10 +2,11 @@ import { useEffect } from "react";
 import { useExperiments } from "@/hooks/useExperiments";
 import { ExperimentTable } from "@/components/experiments/ExperimentTable";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { ApiError } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function ExperimentsPage() {
-  const { data, isLoading, isError, refetch } = useExperiments();
+  const { data, isLoading, isError, error, refetch } = useExperiments();
 
   useEffect(() => {
     document.title = "Experiments - NFL Predictor";
@@ -25,10 +26,15 @@ export function ExperimentsPage() {
   }
 
   if (isError) {
+    const notReady = error instanceof ApiError && error.isNotReady;
     return (
       <ErrorState
-        heading="Connection Failed"
-        body="Could not reach the prediction API. Make sure the server is running on localhost:8000."
+        heading={notReady ? "No Model Trained Yet" : "Connection Failed"}
+        body={
+          notReady
+            ? "Run the training pipeline to generate experiment data."
+            : "Could not reach the prediction API. Make sure the server is running."
+        }
         onRetry={() => refetch()}
       />
     );

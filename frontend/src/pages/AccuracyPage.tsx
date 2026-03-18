@@ -3,6 +3,7 @@ import { usePredictionHistory } from "@/hooks/usePredictionHistory";
 import { useModelInfo } from "@/hooks/useModelInfo";
 import { SummaryCards } from "@/components/accuracy/SummaryCards";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { ApiError } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -70,10 +71,16 @@ export function AccuracyPage() {
   }
 
   if (historyQuery.isError || modelQuery.isError) {
+    const err = modelQuery.error ?? historyQuery.error;
+    const notReady = err instanceof ApiError && err.isNotReady;
     return (
       <ErrorState
-        heading="Connection Failed"
-        body="Could not reach the prediction API. Make sure the server is running on localhost:8000."
+        heading={notReady ? "No Model Trained Yet" : "Connection Failed"}
+        body={
+          notReady
+            ? "Train a model and call POST /api/model/reload to see accuracy stats here."
+            : "Could not reach the prediction API. Make sure the server is running."
+        }
         onRetry={() => {
           historyQuery.refetch();
           modelQuery.refetch();
