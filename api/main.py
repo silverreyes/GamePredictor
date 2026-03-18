@@ -21,7 +21,10 @@ async def lifespan(app: FastAPI):
         app_state["model"] = load_best_model(settings.MODEL_PATH)
     except FileNotFoundError:
         app_state["model"] = None
-    app_state["model_info"] = get_best_experiment(settings.EXPERIMENTS_PATH)
+    try:
+        app_state["model_info"] = get_best_experiment(settings.EXPERIMENTS_PATH)
+    except FileNotFoundError:
+        app_state["model_info"] = None
     yield
     # Shutdown
     app_state.clear()
