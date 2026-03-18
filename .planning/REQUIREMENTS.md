@@ -46,9 +46,9 @@
 
 ### Pipeline & Deployment
 
-- [ ] **PIPE-01**: Weekly refresh automatically fetches new game data and recomputes features on a schedule (APScheduler)
-- [ ] **PIPE-02**: Weekly refresh automatically retrains and stages a candidate model on updated data — staged only, not live until manual approval via PIPE-03
-- [ ] **PIPE-03**: New model is staged but not live until POST /model/reload is called manually — human approval gate before deployment
+- [x] **PIPE-01**: Weekly refresh automatically fetches new game data and recomputes features on a schedule (APScheduler)
+- [x] **PIPE-02**: Weekly refresh automatically retrains and stages a candidate model on updated data — staged only, not live until manual approval via PIPE-03
+- [x] **PIPE-03**: New model is staged but not live until POST /model/reload is called manually — human approval gate before deployment
 - [ ] **PIPE-04**: Full stack runs under Docker Compose: postgres, api, mlflow, frontend, worker services
 
 ## v2 Requirements
@@ -109,9 +109,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DASH-02 | Phase 5 | Complete |
 | DASH-03 | Phase 5 | Complete |
 | DASH-04 | Phase 5 | Complete |
-| PIPE-01 | Phase 6 | Pending |
-| PIPE-02 | Phase 6 | Pending |
-| PIPE-03 | Phase 6 | Pending |
+| PIPE-01 | Phase 6 | Complete |
+| PIPE-02 | Phase 6 | Complete |
+| PIPE-03 | Phase 6 | Complete |
 | PIPE-04 | Phase 6 | Pending |
 
 **Coverage:**

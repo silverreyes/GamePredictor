@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Phase 6 context gathered
-last_updated: "2026-03-18T03:15:31.716Z"
-last_activity: 2026-03-17 — Phase 5 plan 02 complete (dashboard page views + seed data)
+status: executing
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-03-18T04:18:32Z"
+last_activity: 2026-03-18 — Phase 6 plan 01 complete (pipeline refresh + worker)
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 12
-  completed_plans: 12
-  percent: 100
+  total_plans: 14
+  completed_plans: 13
+  percent: 93
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Pre-game win/loss predictions with calibrated confidence scores that beat trivial baselines on the 2023 validation season
-**Current focus:** Phase 5: Dashboard (COMPLETE) -- Ready for Phase 6
+**Current focus:** Phase 6: Pipeline and Deployment (IN PROGRESS)
 
 ## Current Position
 
-Phase: 5 of 6 (Dashboard) -- COMPLETE
-Plan: 2 of 2 in current phase (all complete)
-Status: Phase 5 complete. All 4 dashboard pages built and verified. Ready for Phase 6 (Pipeline and Deployment).
-Last activity: 2026-03-17 — Phase 5 plan 02 complete (dashboard page views + seed data)
+Phase: 6 of 6 (Pipeline and Deployment)
+Plan: 1 of 2 in current phase (1 complete, 1 remaining)
+Status: Phase 6 plan 01 complete. Pipeline module with 4-step refresh and APScheduler worker created and tested. Plan 02 (Docker/deployment) remaining.
+Last activity: 2026-03-18 — Phase 6 plan 01 complete (pipeline refresh + worker)
 
-Progress: [██████████] 100% (of defined plans)
+Progress: [█████████░] 93% (13/14 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 5.7min
-- Total execution time: 1.13 hours
+- Total plans completed: 13
+- Average duration: 5.8min
+- Total execution time: 1.25 hours
 
 **By Phase:**
 
@@ -48,9 +48,10 @@ Progress: [██████████] 100% (of defined plans)
 | 03-model-training-and-autoresearch | 3 | 21min | 7min |
 | 04-prediction-api | 2 | 11min | 5.5min |
 | 05-dashboard | 2 | 19min | 9.5min |
+| 06-pipeline-and-deployment | 1 | 7min | 7min |
 
 **Recent Trend:**
-- Last 5 plans: 03-03 (9min), 04-01 (3min), 04-02 (8min), 05-01 (9min), 05-02 (10min)
+- Last 5 plans: 04-01 (3min), 04-02 (8min), 05-01 (9min), 05-02 (10min), 06-01 (7min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -95,6 +96,10 @@ Recent decisions affecting current work:
 - [Phase 05]: Added empty state handling to AccuracyPage for graceful display when no predictions exist
 - [Phase 05]: Created seed_predictions script to generate 2023 validation predictions for dashboard development
 - [Phase 05]: predictions table created at runtime since DDL from init.sql had not been applied
+- [Phase 06]: Lazy imports in pipeline step functions to avoid circular imports and heavy module loading
+- [Phase 06]: Cache invalidation deletes parquet files before re-downloading -- DB is source of truth
+- [Phase 06]: Step 3 (retrain) non-fatal: failure logged, pipeline continues to step 4 (predictions)
+- [Phase 06]: MLflow tracking URI configurable via MLFLOW_TRACKING_URI env var for Docker
 
 ### Pending Todos
 
@@ -108,6 +113,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T03:15:31.713Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-pipeline-and-deployment/06-CONTEXT.md
+Last session: 2026-03-18T04:18:32Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: .planning/phases/06-pipeline-and-deployment/06-02-PLAN.md
