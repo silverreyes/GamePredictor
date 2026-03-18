@@ -1,0 +1,8 @@
+.git
+.planning
+data/cache
+frontend/node_modules
+mlruns
+__pycache__
+*.pyc
+.env
