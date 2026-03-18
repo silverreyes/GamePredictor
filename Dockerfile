@@ -1,9 +1,8 @@
 FROM python:3.11-slim AS builder
 WORKDIR /app
-RUN pip install --upgrade pip "setuptools<82"
 COPY pyproject.toml ./
-COPY . .
-RUN pip install --no-cache-dir --prefix=/install .
+RUN pip install --no-cache-dir --prefix=/install \
+    $(python -c "import tomllib; print(' '.join(tomllib.load(open('pyproject.toml','rb'))['project']['dependencies']))")
 
 FROM python:3.11-slim AS runtime
 WORKDIR /app
