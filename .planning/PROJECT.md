@@ -2,69 +2,75 @@
 
 ## What This Is
 
-An NFL game outcome prediction system that ingests historical play-by-play data (2005–2024), engineers game-level features, and trains a win/loss classifier. Predictions are served via a FastAPI backend and displayed in a React dashboard showing this week's picks with confidence scores and model performance history. Serves as both a personal tool and portfolio project, with potential to open to others.
+An end-to-end NFL game outcome prediction system. Ingests 20 seasons of play-by-play data, engineers leakage-safe features, trains an XGBoost classifier that beats trivial baselines at 62.89% on the 2023 validation season. Predictions are served via FastAPI and displayed in a React dashboard with weekly picks, season accuracy tracking, experiment comparison, and prediction history. Automated weekly refresh pipeline with human approval gate, deployed via Docker Compose.
 
 ## Core Value
 
-Pre-game win/loss predictions with calibrated confidence scores that beat the Vegas baseline (>53% accuracy on the 2023 validation season).
+Pre-game win/loss predictions with calibrated confidence scores that beat trivial baselines on the 2023 validation season.
 
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+- Ingest and store 20 seasons of NFL data in PostgreSQL with normalized team abbreviations -- v1.0
+- Engineer leakage-safe game-level features with automated temporal validation -- v1.0
+- XGBoost classifier via autoresearch experiment loop, beating both trivial baselines -- v1.0 (62.89% vs 55.51% always-home, 58.20% better-record)
+- FastAPI prediction and model management endpoints with token-protected hot-reload -- v1.0
+- React dashboard with 4 views: picks, accuracy, experiments, history -- v1.0
+- Docker Compose deployment with automated weekly refresh and human approval gate -- v1.0
 
 ### Active
 
-- [ ] Ingest and store historical NFL game and play-by-play data (2005–2024) in PostgreSQL via nfl-data-py
-- [ ] Engineer game-level features from play-by-play data with no data leakage (rolling stats use only prior-game data)
-- [ ] Train a win/loss classifier (XGBoost), log all experiments to experiments.jsonl and MLflow
-- [ ] Model training uses an autoresearch-style experiment loop: agent reads program.md, picks next experiment, modifies only models/train.py, runs training, logs to experiments.jsonl, keeps or reverts based on 2023 validation accuracy
-- [ ] Temporal split: train 2005–2022, validate 2023, holdout test 2024
-- [ ] Beat always-home baseline (~57%) and better-record baseline (~60%) on the 2023 validation season specifically (not training accuracy or aggregate accuracy)
-- [ ] Expose predictions via FastAPI endpoints (current week picks + historical results)
-- [ ] Display predictions dashboard: this week's games with predicted winner + confidence score
-- [ ] Display model scoreboard: historical experiment accuracy and comparison
-- [ ] Weekly data refresh + model retrain pipeline — automatic fetch/retrain, manual approval before deploy
-- [ ] Support keep/revert on model updates based on validation results
-- [ ] Deploy via Docker Compose on Linux VPS
+- [ ] Probability calibration (Platt scaling or isotonic regression) on validation set
+- [ ] Advanced engineered features: CPOE, success rate, weighted rolling averages, opponent adjustments
+- [ ] QB consistency features (EPA standard deviation across games)
+- [ ] SHAP-based feature importance display per prediction in the dashboard
+- [ ] Calibration plot: predicted win probability vs actual win rate by bucket
+- [ ] Model performance over time chart (rolling accuracy by week)
+- [ ] Weekly recap view with correct/incorrect game highlights
 
 ### Out of Scope
 
-- Live in-game predictions — pre-game only, no real-time scoring data
-- Vegas spread/over-under ingestion — confidence from model probability, not odds comparison
-- Player-level injury/availability data — team-level aggregate features only for v1
-- Mobile app — web dashboard only
-- User accounts / authentication — single-user or open read access
+- Live in-game predictions -- pre-game only, no real-time scoring data
+- Vegas spread/over-under ingestion -- confidence from model probability, not odds comparison
+- Player-level injury/availability data -- team-level aggregate features only for v1
+- Mobile app -- web dashboard only, PWA not yet explored
+- User accounts / authentication -- single-user or open read access
+- Neural network models -- gradient boosting outperforms deep learning on ~5K structured rows
+- Betting advice framing -- predictions only, no wagering guidance
 
 ## Context
 
-- Data source: nfl-data-py (free, covers play-by-play back to 1999 but targeting 2005+)
-- Critical constraint: all rolling/aggregate features must be computed from data strictly prior to the game being predicted — no future leakage
-- Experiment tracking: every training run logged to both experiments.jsonl (flat file, portable) and MLflow (visual UI)
-- The keep/revert pattern means a new model only goes live after manual inspection of validation metrics
-- Docker Compose deployment targets a Linux VPS; local dev should mirror prod environment
+Shipped v1.0 with ~8,200 LOC (6,110 Python + 1,935 TypeScript + 146 SQL).
+Tech stack: Python 3.11, PostgreSQL, nflreadpy, pandas, XGBoost, FastAPI, React + Vite + Tailwind v4 + shadcn/ui, Docker Compose, MLflow, APScheduler.
+Data source: nflreadpy (was nfl-data-py, switched during Phase 1 for compatibility).
+Best model: Experiment 5 -- lower learning rate (0.1) + early stopping, 62.89% on 2023 validation.
+Full 17-feature set proved near-optimal; all ablation experiments degraded accuracy.
 
 ## Constraints
 
-- **Data leakage**: All rolling features must use only data prior to the game being predicted — strictly enforced
-- **Temporal split**: Train 2005–2022, validate 2023, holdout 2024 — no shuffling across time boundaries
-- **Stack**: Python 3.11, PostgreSQL, nfl-data-py, pandas, scikit-learn, XGBoost, FastAPI, React, Docker Compose, MLflow
-- **Benchmark**: Must beat always-home baseline (~57%) and better-record baseline (~60%) on the **2023 validation season specifically** — training accuracy and overall accuracy do not count
-- **Experiment loop**: Model training phase uses an autoresearch loop — agent reads program.md, selects next experiment, modifies only models/train.py, runs training, logs result to experiments.jsonl, keeps if 2023 val accuracy improves else reverts
-- **Feature schema**: One row per game (home team perspective) — home/away symmetry handled by feature design, not row duplication
-- **Team normalization**: Team abbreviation normalization (OAK→LV, SD→LAC, etc.) applied at ingestion — downstream code assumes clean abbreviations
-- **Deployment**: Docker Compose on Linux VPS — services must be containerized
+- **Data leakage**: All rolling features must use only data prior to the game being predicted -- strictly enforced via shift(1) + 6 automated leakage tests
+- **Temporal split**: Train 2005-2022, validate 2023, holdout 2024 -- no shuffling across time boundaries
+- **Stack**: Python 3.11, PostgreSQL, nflreadpy, pandas, XGBoost, FastAPI, React, Docker Compose, MLflow
+- **Benchmark**: Must beat always-home (~57%) and better-record (~60%) baselines on the 2023 validation season specifically
+- **Feature schema**: One row per game (home team perspective)
+- **Team normalization**: Applied at ingestion via TEAM_ABBREV_MAP constant in data/sources.py
+- **Deployment**: Docker Compose on Linux VPS -- 5 services (postgres, api, mlflow, worker, caddy)
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| nfl-data-py as data source | Free, comprehensive, covers 2005+ play-by-play | — Pending |
-| XGBoost as primary classifier | Strong tabular performance, interpretable feature importance | — Pending |
-| experiments.jsonl + MLflow dual logging | Portable flat file for scripting + visual UI for comparison | — Pending |
-| Semi-automated pipeline | Automatic fetch/retrain but manual approval prevents bad models from auto-deploying | — Pending |
-| Temporal train/val/test split | Prevents data leakage across seasons, mirrors real-world deployment | — Pending |
+| nflreadpy as data source | Free, comprehensive, covers 2005+ play-by-play | Good -- reliable across all 20 seasons |
+| XGBoost as primary classifier | Strong tabular performance, interpretable feature importance | Good -- 62.89% val accuracy, TreeSHAP works well |
+| experiments.jsonl + MLflow dual logging | Portable flat file for scripting + visual UI for comparison | Good -- JSONL parsed directly by API for experiment scoreboard |
+| Semi-automated pipeline | Automatic fetch/retrain but manual approval prevents bad models from auto-deploying | Good -- approval gate verified in Phase 6 |
+| Temporal train/val/test split | Prevents data leakage across seasons, mirrors real-world deployment | Good -- 2024 holdout untouched for future evaluation |
+| Per-season rolling reset | NFL rosters change between seasons; expanding window resets per team/season | Good -- prevents cross-season contamination |
+| Full 17-feature set | All ablation experiments degraded accuracy | Good -- near-optimal; no feature pruning needed |
+| Lower learning rate + early stopping | Biggest improvement lever for generalization (Exp 5) | Good -- +1.68pp over baseline config |
+| Caddy as edge proxy | Static file serving + API reverse proxy + automatic HTTPS | Good -- simple config, same-origin relative URLs |
+| Models volume read-only for API | Worker writes, API reads -- prevents API from corrupting model artifacts | Good -- clean separation of concerns |
 
 ---
-*Last updated: 2026-03-15 after initialization + experiment loop clarification*
+*Last updated: 2026-03-18 after v1.0 milestone*
