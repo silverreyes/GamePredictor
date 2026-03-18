@@ -5,7 +5,7 @@ import type {
   ExperimentResponse,
 } from "@/lib/types";
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(API_BASE + path);

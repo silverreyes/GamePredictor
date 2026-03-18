@@ -9,7 +9,84 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nfl"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    command: ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://nfl:${POSTGRES_PASSWORD:-nfldev}@postgres:5432/nflpredictor
+      MODEL_PATH: /app/models-vol/best_model.json
+      EXPERIMENTS_PATH: /app/models-vol/experiments.jsonl
+      RELOAD_TOKEN: ${RELOAD_TOKEN:-devtoken}
+    volumes:
+      - models:/app/models-vol:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  worker:
+    build: .
+    command: ["python", "-m", "pipeline.worker"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://nfl:${POSTGRES_PASSWORD:-nfldev}@postgres:5432/nflpredictor
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MODEL_PATH: /app/models-vol/best_model.json
+      EXPERIMENTS_PATH: /app/models-vol/experiments.jsonl
+      REFRESH_CRON_HOUR: ${REFRESH_CRON_HOUR:-6}
+    volumes:
+      - models:/app/models-vol
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: mlflow.Dockerfile
+    # NOTE: MLflow uses postgresql:// (psycopg2) not postgresql+psycopg:// (psycopg3).
+    # The API uses psycopg3 via SQLAlchemy; MLflow uses psycopg2 internally.
+    # This is why mlflow.Dockerfile installs psycopg2-binary separately.
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri postgresql://nfl:${POSTGRES_PASSWORD:-nfldev}@postgres:5432/mlflow
+      --default-artifact-root /mlartifacts
+    volumes:
+      - mlartifacts:/mlartifacts
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./frontend/dist:/srv
+      - caddy_data:/data
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   pgdata:
+  mlartifacts:
+  models:
+  caddy_data:
