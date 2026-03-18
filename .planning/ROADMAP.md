@@ -108,11 +108,11 @@ Plans:
   2. Weekly refresh automatically fetches new game data, recomputes features, and stages a retrained candidate model without manual intervention
   3. A staged model does not go live until POST /api/model/reload is explicitly called -- the human approval gate prevents automatic deployment of untested models
   4. Data and model artifacts persist across container rebuilds via named Docker volumes
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md — Pipeline module (refresh.py + worker.py) with 4-step weekly refresh and APScheduler entrypoint
+- [ ] 06-02-PLAN.md — Docker infrastructure (Dockerfile, Caddyfile, docker-compose.yml) and full 5-service stack configuration
 
 ## Progress
 
