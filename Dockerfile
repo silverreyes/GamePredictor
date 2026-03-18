@@ -1,6 +1,6 @@
 FROM python:3.11-slim AS builder
 WORKDIR /app
-RUN pip install --upgrade pip setuptools
+RUN pip install --upgrade pip "setuptools<82"
 COPY pyproject.toml ./
 COPY . .
 RUN pip install --no-cache-dir --prefix=/install .
