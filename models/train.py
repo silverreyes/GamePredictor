@@ -1,13 +1,12 @@
-"""Training pipeline with temporal split, dual logging, TreeSHAP, and multi-season evaluation.
+"""Training pipeline with temporal split, JSONL logging, TreeSHAP, and multi-season evaluation.
 
 This is the ONLY file modified during the autoresearch experiment loop (CLAUDE.md).
-Every experiment logs to both experiments.jsonl (append-only) and MLflow (local tracking).
+Every experiment logs to experiments.jsonl (append-only).
 
 Functions:
-    setup_mlflow: Configure local file-based MLflow tracking.
     load_and_split: Temporal split with tie/NaN exclusion.
     train_and_evaluate: Train XGBoost + evaluate on 2021/2022/2023 + TreeSHAP top-5.
-    log_experiment: Dual logging to experiments.jsonl and MLflow.
+    log_experiment: Logging to experiments.jsonl.
     save_model: Save model artifact by experiment ID.
     save_best_model: Overwrite best model checkpoint.
     should_keep: Compound keep/revert decision logic.
@@ -17,7 +16,6 @@ import json
 import os
 from datetime import datetime, timezone
 
-import mlflow
 import numpy as np
 import pandas as pd
 import shap
@@ -28,16 +26,6 @@ from features.definitions import FORBIDDEN_FEATURES, TARGET
 
 # Metadata columns that are NOT model features
 META_COLS = ["game_id", "season", "week", "gameday", "home_team", "away_team"]
-
-
-def setup_mlflow():
-    """Configure MLflow for local file-based tracking.
-
-    Uses ./mlruns directory (auto-created). No server needed.
-    Run `mlflow ui` ad-hoc to visualize at http://127.0.0.1:5000.
-    """
-    mlflow.set_tracking_uri("file:./mlruns")
-    mlflow.set_experiment("nfl-game-predictor")
 
 
 def load_and_split(df: pd.DataFrame) -> tuple:
@@ -187,7 +175,7 @@ def log_experiment(
     model_path: str | None,
     jsonl_path: str = "models/experiments.jsonl",
 ):
-    """Log experiment to both experiments.jsonl and MLflow.
+    """Log experiment to experiments.jsonl.
 
     Args:
         experiment_id: Sequential experiment number.
@@ -232,25 +220,6 @@ def log_experiment(
     # Append to JSONL (append-only, CLAUDE.md rule)
     with open(jsonl_path, "a") as f:
         f.write(json.dumps(entry) + "\n")
-
-    # Log to MLflow
-    with mlflow.start_run(run_name=f"exp-{experiment_id:03d}"):
-        mlflow.log_params(params)
-        mlflow.log_metrics(
-            {
-                "val_accuracy_2023": val_acc_2023,
-                "val_accuracy_2022": val_acc_2022,
-                "val_accuracy_2021": val_acc_2021,
-                "log_loss": log_loss_val,
-                "brier_score": brier_score_val,
-                "baseline_always_home": baseline_home,
-                "baseline_better_record": baseline_record,
-            }
-        )
-        mlflow.set_tag("keep", str(keep))
-        mlflow.set_tag("hypothesis", hypothesis)
-        if model_path:
-            mlflow.log_artifact(model_path)
 
 
 def save_model(
@@ -370,9 +339,6 @@ def run_experiment():
     """
     from features.build import build_game_features
     from models.baselines import compute_baselines
-
-    # Setup
-    setup_mlflow()
 
     # Load and split
     print(f"\n{'='*60}")

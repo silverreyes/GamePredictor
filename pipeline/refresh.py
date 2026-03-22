@@ -5,7 +5,6 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-import mlflow
 import pandas as pd
 
 from data.db import get_engine, get_table
@@ -145,18 +144,10 @@ def retrain_and_stage(engine, experiments_path, model_dir):
         load_and_split,
         log_experiment,
         save_best_model,
-        setup_mlflow,
         should_keep,
         train_and_evaluate,
     )
     from features.definitions import TARGET
-
-    # MLflow setup: respect MLFLOW_TRACKING_URI env var for Docker
-    if os.environ.get("MLFLOW_TRACKING_URI"):
-        mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
-        mlflow.set_experiment("nfl-game-predictor")
-    else:
-        setup_mlflow()
 
     # Load feature matrix and split
     logger.info("Loading feature matrix for retraining...")
