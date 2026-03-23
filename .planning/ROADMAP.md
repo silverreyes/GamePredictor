@@ -71,7 +71,11 @@ Plans:
   2. A performance summary shows the spread model's MAE on completed games
   3. After games complete, PickCards show the actual margin and how far off the spread prediction was
   4. Dashboard displays a comparison of how often the spread model vs the classifier correctly picks the winner
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 09-01-PLAN.md -- Data layer: TypeScript types, API functions, TanStack Query hooks, backend spread history endpoint
+- [ ] 09-02-PLAN.md -- PickCard spread display: SpreadLabel component, PickCard/PicksGrid/ThisWeekPage/HistoryTable wiring
+- [ ] 09-03-PLAN.md -- Accuracy page spread metrics: SpreadSummaryCards with MAE, winner accuracy, agreement breakdown
 
 ### Phase 10: Pipeline and Production Deployment
 **Goal**: Spread predictions are generated automatically each week and the complete v1.1 system is deployed to production
@@ -97,5 +101,5 @@ Plans:
 | 6. Pipeline and Deployment | v1.0 | 3/3 | Complete | 2026-03-22 |
 | 7. Spread Model Training | v1.1 | 3/3 | Complete | 2026-03-23 |
 | 8. Database and API Integration | v1.1 | 1/2 | In progress | - |
-| 9. Dashboard Integration | v1.1 | 0/? | Not started | - |
+| 9. Dashboard Integration | v1.1 | 0/3 | Not started | - |
 | 10. Pipeline and Production Deployment | v1.1 | 0/? | Not started | - |
