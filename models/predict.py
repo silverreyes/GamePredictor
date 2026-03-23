@@ -9,6 +9,9 @@ Functions:
     get_best_experiment: Parse experiments.jsonl for the best kept experiment.
     detect_current_week: Data-driven current week detection from schedule.
     generate_predictions: Build features, run inference, store predictions.
+    load_best_spread_model: Load XGBoost spread model from best_spread_model.json.
+    get_best_spread_experiment: Parse spread_experiments.jsonl for lowest MAE.
+    generate_spread_predictions: Build features, run spread inference, store.
 """
 
 import json
@@ -16,7 +19,7 @@ import os
 
 import numpy as np
 import pandas as pd
-from xgboost import XGBClassifier
+from xgboost import XGBClassifier, XGBRegressor
 
 from data.db import get_engine, get_table
 from features.build import build_game_features
@@ -310,6 +313,208 @@ def generate_predictions(
                 "season", "week", "game_date", "home_team", "away_team",
                 "predicted_winner", "confidence", "confidence_tier",
                 "model_id", "actual_winner", "correct",
+            ]
+        }
+        upsert = stmt.on_conflict_do_update(
+            index_elements=["game_id"],
+            set_=update_columns,
+        )
+        with engine.begin() as conn:
+            conn.execute(upsert)
+
+    return records
+
+
+def load_best_spread_model(
+    path: str = "models/artifacts/best_spread_model.json",
+) -> XGBRegressor:
+    """Load XGBoost spread regression model from the best spread model artifact.
+
+    Args:
+        path: Path to the saved XGBoost JSON model file.
+
+    Returns:
+        Loaded XGBRegressor ready for inference.
+
+    Raises:
+        FileNotFoundError: If the model file does not exist at the given path.
+    """
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Spread model file not found at '{path}'. "
+            "Run the spread training pipeline first to generate a model artifact."
+        )
+    model = XGBRegressor()
+    model.load_model(path)
+    return model
+
+
+def get_best_spread_experiment(
+    jsonl_path: str = "models/spread_experiments.jsonl",
+) -> dict | None:
+    """Parse spread_experiments.jsonl for the best kept spread experiment.
+
+    Finds the experiment entry with keep=True and the LOWEST mae_2023
+    (lower MAE is better, unlike classifier's higher-is-better accuracy).
+
+    Args:
+        jsonl_path: Path to the spread experiments JSONL log file.
+
+    Returns:
+        The full experiment dict (experiment_id, timestamp, params, mae_2023,
+        rmse_2023, derived_win_accuracy_2023, etc.), or None if no kept
+        experiments exist.
+
+    Raises:
+        FileNotFoundError: If the JSONL file does not exist.
+    """
+    if not os.path.exists(jsonl_path):
+        raise FileNotFoundError(
+            f"Spread experiments file not found at '{jsonl_path}'. "
+            "Run at least one spread experiment first."
+        )
+
+    best = None
+    with open(jsonl_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            entry = json.loads(line)
+            if entry.get("keep"):
+                if best is None or entry["mae_2023"] < best["mae_2023"]:
+                    best = entry
+
+    if best is not None:
+        # Normalize model_path: JSONL may contain Windows backslashes
+        # (e.g., "models/artifacts\\spread_model_exp001.json") which break on Linux.
+        mp = best.get("model_path")
+        best["model_path"] = mp.replace("\\", "/") if mp else ""
+
+    return best
+
+
+def generate_spread_predictions(
+    model: XGBRegressor,
+    season: int,
+    week: int,
+    engine,
+    model_id: int | None = None,
+) -> list[dict]:
+    """Generate spread predictions for a specific week and store in spread_predictions table.
+
+    Mirrors generate_predictions() but uses XGBRegressor for point spread inference
+    instead of XGBClassifier for win probability. Winner is derived from spread sign:
+    predicted_spread >= 0 means home team wins, < 0 means away team wins.
+
+    Args:
+        model: Loaded XGBRegressor for spread inference.
+        season: Season year (e.g., 2024).
+        week: Week number to predict (e.g., 5).
+        engine: SQLAlchemy engine connected to the database.
+        model_id: Optional experiment_id for auditing.
+
+    Returns:
+        List of spread prediction dicts (one per game) that were upserted into
+        the spread_predictions table.
+    """
+    # Step 1: Build features for all completed games in the season
+    features_df = build_game_features(seasons=[season])
+
+    # Filter to only completed games (have rolling features, not NaN)
+    rolling_cols = [c for c in features_df.columns if c.startswith("home_rolling_")]
+    completed = features_df.dropna(subset=rolling_cols)
+
+    # Step 2: Get schedule info for unplayed games in the target week
+    schedule_query = """
+    SELECT game_id, season, week, gameday, home_team, away_team,
+           home_rest, away_rest, div_game
+    FROM schedules
+    WHERE season = %(season)s AND week = %(week)s
+      AND game_type = 'REG' AND home_score IS NULL
+    """
+    unplayed = pd.read_sql(schedule_query, engine, params={"season": season, "week": week})
+
+    if unplayed.empty:
+        return []
+
+    # Step 3: Build feature vectors for each unplayed game
+    feature_names = model.get_booster().feature_names
+    rows = []
+
+    for _, game in unplayed.iterrows():
+        home_team = game["home_team"]
+        away_team = game["away_team"]
+
+        # Get each team's latest rolling features
+        home_feats = _get_team_rolling_features(completed, home_team)
+        away_feats = _get_team_rolling_features(completed, away_team)
+
+        # Re-prefix: rolling_X -> home_rolling_X / away_rolling_X
+        game_features = {}
+        for key, val in home_feats.items():
+            game_features[f"home_{key}"] = val
+        for key, val in away_feats.items():
+            game_features[f"away_{key}"] = val
+
+        # Add situational features from schedule
+        game_features["home_rest"] = game["home_rest"]
+        game_features["away_rest"] = game["away_rest"]
+        game_features["div_game"] = game["div_game"]
+
+        rows.append(game_features)
+
+    # Step 4: Build DataFrame with correct column ordering from model
+    X = pd.DataFrame(rows)[feature_names]
+
+    # Step 5: Run spread inference (regression, not classification)
+    spreads = model.predict(X)
+
+    # Step 6: Compute predicted winner from spread sign
+    records = []
+    for i, (_, game) in enumerate(unplayed.iterrows()):
+        predicted_spread = float(spreads[i])
+        home_team = str(game["home_team"])
+        away_team = str(game["away_team"])
+
+        # Home-team convention: spread >= 0 means home wins
+        predicted_winner = home_team if predicted_spread >= 0 else away_team
+
+        # Convert numpy/pandas types to Python native
+        game_date = game["gameday"]
+        if pd.notna(game_date):
+            game_date = str(game_date)
+        else:
+            game_date = None
+
+        record = {
+            "game_id": str(game["game_id"]),
+            "season": int(game["season"]),
+            "week": int(game["week"]),
+            "game_date": game_date,
+            "home_team": home_team,
+            "away_team": away_team,
+            "predicted_spread": predicted_spread,
+            "predicted_winner": predicted_winner,
+            "model_id": model_id,
+            "actual_spread": None,
+            "actual_winner": None,
+            "correct": None,
+        }
+        records.append(record)
+
+    # Step 7: Upsert into spread_predictions table
+    if records:
+        from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+        spread_table = get_table("spread_predictions", engine)
+        stmt = pg_insert(spread_table).values(records)
+        update_columns = {
+            col: stmt.excluded[col]
+            for col in [
+                "season", "week", "game_date", "home_team", "away_team",
+                "predicted_spread", "predicted_winner", "model_id",
+                "actual_spread", "actual_winner", "correct",
             ]
         }
         upsert = stmt.on_conflict_do_update(
