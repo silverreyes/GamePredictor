@@ -1,7 +1,12 @@
 import { useEffect, useMemo } from "react";
 import { usePredictionHistory } from "@/hooks/usePredictionHistory";
 import { useModelInfo } from "@/hooks/useModelInfo";
+import { useSpreadHistory } from "@/hooks/useSpreadHistory";
 import { SummaryCards } from "@/components/accuracy/SummaryCards";
+import {
+  SpreadSummaryCards,
+  computeAgreement,
+} from "@/components/accuracy/SpreadSummaryCards";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { ApiError } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +29,7 @@ interface WeekBreakdown {
 export function AccuracyPage() {
   const historyQuery = usePredictionHistory();
   const modelQuery = useModelInfo();
+  const spreadHistoryQuery = useSpreadHistory();
 
   useEffect(() => {
     document.title = "Season Accuracy - NFL Predictor";
@@ -51,6 +57,15 @@ export function AccuracyPage() {
         accuracy: stats.total > 0 ? stats.correct / stats.total : 0,
       }));
   }, [historyQuery.data]);
+
+  const agreement = useMemo(() => {
+    if (!historyQuery.data?.predictions || !spreadHistoryQuery.data?.predictions)
+      return null;
+    return computeAgreement(
+      historyQuery.data.predictions,
+      spreadHistoryQuery.data.predictions,
+    );
+  }, [historyQuery.data, spreadHistoryQuery.data]);
 
   if (historyQuery.isLoading || modelQuery.isLoading) {
     return (
@@ -144,6 +159,35 @@ export function AccuracyPage() {
               ))}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Spread Model Section -- hidden when spread model not loaded */}
+      {modelQuery.data.spread_model && (
+        <div className="mt-8">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
+            Spread Model
+          </h2>
+          {spreadHistoryQuery.isLoading ? (
+            <div className="flex flex-col md:flex-row gap-6">
+              <Skeleton className="h-32 flex-1 rounded-lg" />
+              <Skeleton className="h-32 flex-1 rounded-lg" />
+              <Skeleton className="h-32 flex-1 rounded-lg" />
+            </div>
+          ) : (
+            <SpreadSummaryCards
+              spreadModel={modelQuery.data.spread_model}
+              classifierAccuracy={historyQuery.data.summary.accuracy}
+              agreement={
+                agreement ?? {
+                  bothCorrect: 0,
+                  bothWrong: 0,
+                  onlyClassifier: 0,
+                  onlySpread: 0,
+                }
+              }
+            />
+          )}
         </div>
       )}
     </div>
