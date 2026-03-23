@@ -19,6 +19,22 @@ class PredictionResponse(BaseModel):
     correct: bool | None = None
 
 
+class SpreadPredictionResponse(BaseModel):
+    """Single game spread prediction."""
+
+    game_id: str
+    season: int
+    week: int
+    game_date: str | None = None
+    home_team: str
+    away_team: str
+    predicted_spread: float
+    predicted_winner: str
+    actual_spread: float | None = None
+    actual_winner: str | None = None
+    correct: bool | None = None
+
+
 class HistorySummary(BaseModel):
     """Summary statistics for prediction history."""
 
@@ -43,6 +59,25 @@ class WeekPredictionsResponse(BaseModel):
     predictions: list[PredictionResponse]
 
 
+class SpreadWeekResponse(BaseModel):
+    """Response for GET /api/predictions/spreads/week/{season}/{week}."""
+
+    season: int
+    week: int
+    status: str = "ok"
+    predictions: list[SpreadPredictionResponse]
+
+
+class SpreadModelInfo(BaseModel):
+    """Spread model metadata nested in ModelInfoResponse."""
+
+    mae: float
+    rmse: float
+    derived_win_accuracy: float
+    training_date: str
+    experiment_id: int
+
+
 class ModelInfoResponse(BaseModel):
     """Response for GET /model/info."""
 
@@ -53,6 +88,7 @@ class ModelInfoResponse(BaseModel):
     hypothesis: str
     baseline_always_home: float
     baseline_better_record: float
+    spread_model: SpreadModelInfo | None = None
 
 
 class ShapFeature(BaseModel):
@@ -90,6 +126,9 @@ class ReloadResponse(BaseModel):
     experiment_id: int
     val_accuracy_2023: float
     predictions_generated: int
+    spread_experiment_id: int | None = None
+    spread_mae: float | None = None
+    spread_predictions_generated: int = 0
 
 
 class HealthResponse(BaseModel):

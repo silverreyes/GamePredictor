@@ -144,3 +144,24 @@ CREATE TABLE IF NOT EXISTS predictions (
 
 CREATE INDEX IF NOT EXISTS idx_predictions_season_week ON predictions (season, week);
 CREATE INDEX IF NOT EXISTS idx_predictions_season ON predictions (season);
+
+-- Spread predictions: pre-computed spread predictions (one per game, upsert on re-prediction)
+CREATE TABLE IF NOT EXISTS spread_predictions (
+    game_id VARCHAR(20) PRIMARY KEY,
+    season SMALLINT NOT NULL,
+    week SMALLINT NOT NULL,
+    game_date DATE,
+    home_team VARCHAR(3) NOT NULL,
+    away_team VARCHAR(3) NOT NULL,
+    predicted_spread REAL NOT NULL,
+    predicted_winner VARCHAR(3) NOT NULL,
+    model_id INTEGER,
+    actual_spread REAL,
+    actual_winner VARCHAR(3),
+    correct BOOLEAN
+);
+
+CREATE INDEX IF NOT EXISTS idx_spread_predictions_season_week
+    ON spread_predictions (season, week);
+CREATE INDEX IF NOT EXISTS idx_spread_predictions_season
+    ON spread_predictions (season);

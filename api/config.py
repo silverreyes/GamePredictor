@@ -14,6 +14,12 @@ class Settings:
     DATABASE_URL: str = os.environ.get("DATABASE_URL", "")
     MODEL_PATH: str = os.environ.get("MODEL_PATH", "models/artifacts/best_model.json")
     EXPERIMENTS_PATH: str = os.environ.get("EXPERIMENTS_PATH", "models/experiments.jsonl")
+    SPREAD_MODEL_PATH: str = os.environ.get(
+        "SPREAD_MODEL_PATH", "models/artifacts/best_spread_model.json"
+    )
+    SPREAD_EXPERIMENTS_PATH: str = os.environ.get(
+        "SPREAD_EXPERIMENTS_PATH", "models/spread_experiments.jsonl"
+    )
 
     # Confidence tier thresholds (configurable, not hardcoded per CONTEXT.md)
     CONFIDENCE_HIGH: float = float(os.environ.get("CONFIDENCE_HIGH", "0.65"))
