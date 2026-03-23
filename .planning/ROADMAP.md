@@ -27,7 +27,7 @@ Full details archived to `milestones/v1.0-ROADMAP.md`
 
 - [x] **Phase 7: Spread Model Training** - Formalize prototype into production-grade training with validated metrics and experiment logging
 - [x] **Phase 8: Database and API Integration** - Spread predictions table and API endpoints serving spread data alongside classifier
-- [ ] **Phase 9: Dashboard Integration** - PickCards show spread predictions side-by-side with classifier, plus spread performance metrics
+- [x] **Phase 9: Dashboard Integration** - PickCards show spread predictions side-by-side with classifier, plus spread performance metrics
 - [ ] **Phase 10: Pipeline and Production Deployment** - Weekly spread inference, historical seeding, and production deploy
 
 ## Phase Details
@@ -75,7 +75,7 @@ Plans:
 Plans:
 - [x] 09-01-PLAN.md -- Data layer: TypeScript types, API functions, TanStack Query hooks, backend spread history endpoint
 - [x] 09-02-PLAN.md -- PickCard spread display: SpreadLabel component, PickCard/PicksGrid/ThisWeekPage/HistoryTable wiring
-- [ ] 09-03-PLAN.md -- Accuracy page spread metrics: SpreadSummaryCards with MAE, winner accuracy, agreement breakdown
+- [x] 09-03-PLAN.md -- Accuracy page spread metrics: SpreadSummaryCards with MAE, winner accuracy, agreement breakdown
 
 ### Phase 10: Pipeline and Production Deployment
 **Goal**: Spread predictions are generated automatically each week and the complete v1.1 system is deployed to production
@@ -101,5 +101,5 @@ Plans:
 | 6. Pipeline and Deployment | v1.0 | 3/3 | Complete | 2026-03-22 |
 | 7. Spread Model Training | v1.1 | 3/3 | Complete | 2026-03-23 |
 | 8. Database and API Integration | v1.1 | 2/2 | Complete | 2026-03-23 |
-| 9. Dashboard Integration | v1.1 | 2/3 | In progress | - |
+| 9. Dashboard Integration | v1.1 | 3/3 | Complete | 2026-03-23 |
 | 10. Pipeline and Production Deployment | v1.1 | 0/? | Not started | - |

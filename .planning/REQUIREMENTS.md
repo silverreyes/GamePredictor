@@ -25,7 +25,7 @@ Requirements for the Point Spread Model milestone. Each maps to roadmap phases.
 ### Dashboard
 
 - [x] **DASH-01**: Existing PickCards display predicted spread alongside classifier win probability per game
-- [ ] **DASH-02**: Dashboard shows spread model MAE on a performance summary
+- [x] **DASH-02**: Dashboard shows spread model MAE on a performance summary
 - [x] **DASH-03**: After games complete, PickCards show actual result and spread prediction error
 - [x] **DASH-04**: Dashboard shows how often spread model picks the correct winner vs the classifier
 
@@ -82,7 +82,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | API-03 | Phase 8 | Complete |
 | API-04 | Phase 8 | Complete |
 | DASH-01 | Phase 9 | Complete |
-| DASH-02 | Phase 9 | Pending |
+| DASH-02 | Phase 9 | Complete |
 | DASH-03 | Phase 9 | Complete |
 | DASH-04 | Phase 9 | Complete |
 | PIPE-01 | Phase 10 | Pending |
