@@ -9,11 +9,11 @@ Requirements for the Point Spread Model milestone. Each maps to roadmap phases.
 
 ### Spread Model Training
 
-- [ ] **TRAIN-01**: Training script produces XGBRegressor model predicting home point differential using same 17 features and temporal split as classifier
-- [ ] **TRAIN-02**: Training evaluates MAE, RMSE, and derived win accuracy on 2023 validation, plus MAE/RMSE on 2021 and 2022 for overfitting monitoring
-- [ ] **TRAIN-03**: Training computes and logs naive baselines (always +2.5 and always 0) for comparison
-- [ ] **TRAIN-04**: Experiments are logged to spread_experiments.jsonl (append-only) with full metadata
-- [ ] **TRAIN-05**: Best spread model is saved as best_spread_model.json alongside classifier artifacts
+- [x] **TRAIN-01**: Training script produces XGBRegressor model predicting home point differential using same 17 features and temporal split as classifier
+- [x] **TRAIN-02**: Training evaluates MAE, RMSE, and derived win accuracy on 2023 validation, plus MAE/RMSE on 2021 and 2022 for overfitting monitoring
+- [x] **TRAIN-03**: Training computes and logs naive baselines (always +2.5 and always 0) for comparison
+- [x] **TRAIN-04**: Experiments are logged to spread_experiments.jsonl (append-only) with full metadata
+- [x] **TRAIN-05**: Best spread model is saved as best_spread_model.json alongside classifier artifacts
 
 ### Database & API
 
@@ -72,11 +72,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TRAIN-01 | Phase 7 | Pending |
-| TRAIN-02 | Phase 7 | Pending |
-| TRAIN-03 | Phase 7 | Pending |
-| TRAIN-04 | Phase 7 | Pending |
-| TRAIN-05 | Phase 7 | Pending |
+| TRAIN-01 | Phase 7 | Complete |
+| TRAIN-02 | Phase 7 | Complete |
+| TRAIN-03 | Phase 7 | Complete |
+| TRAIN-04 | Phase 7 | Complete |
+| TRAIN-05 | Phase 7 | Complete |
 | API-01 | Phase 8 | Pending |
 | API-02 | Phase 8 | Pending |
 | API-03 | Phase 8 | Pending |

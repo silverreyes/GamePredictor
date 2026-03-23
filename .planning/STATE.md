@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Point Spread Model
-status: planning
-stopped_at: Phase 7 context gathered
-last_updated: "2026-03-23T13:54:23.108Z"
-last_activity: 2026-03-22 -- Roadmap created for v1.1
+status: executing
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-03-23T15:21:04Z"
+last_activity: 2026-03-23 -- Completed 07-01 spread training hardening
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 2
+  completed_plans: 1
+  percent: 12
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 ## Current Position
 
 Phase: 7 of 10 (Spread Model Training) -- first phase of v1.1
-Plan: None yet (ready to plan)
-Status: Ready to plan Phase 7
-Last activity: 2026-03-22 -- Roadmap created for v1.1
+Plan: 2 of 2 (next: 07-02-PLAN.md)
+Status: Executing Phase 7
+Last activity: 2026-03-23 -- Completed 07-01 spread training hardening
 
-Progress: [░░░░░░░░░░] 0% (0/4 v1.1 phases)
+Progress: [#░░░░░░░░░] 12% (1/2 plans in Phase 7, 0/4 v1.1 phases)
 
 ## Performance Metrics
 
@@ -38,6 +38,12 @@ Progress: [░░░░░░░░░░] 0% (0/4 v1.1 phases)
 - Total plans completed: 17
 - Average duration: 5.6min
 - Total execution time: 1.58 hours
+
+**v1.1 Execution:**
+
+| Phase | Plan | Duration | Tasks | Files |
+|-------|------|----------|-------|-------|
+| 07 | 01 | 36min | 2 | 3 |
 
 ## Accumulated Context
 
@@ -54,6 +60,11 @@ Full decision log in PROJECT.md Key Decisions table.
 - Spread training script (train_spread.py) mirrors classifier structure, loads target from parquet cache (no DB needed for training)
 - Spread Exp 1 baseline: MAE 10.68, RMSE 13.87, derived win accuracy 60.16% (vs classifier 62.89%)
 
+**v1.1 Phase 7:**
+- 07-01: Used params.pop() to extract objective from hyperparams dict, enabling alternative loss functions
+- 07-01: Created spread_program.md with Exp 1 baselines and experiment queue (Exps 2-5)
+- 07-01: 14-test suite covering all 5 TRAIN requirements (temporal split, metrics, baselines, logging, model save)
+
 ### Pending Todos
 
 None.
@@ -64,6 +75,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-23T13:54:23.105Z
-Stopped at: Phase 7 context gathered
-Resume file: .planning/phases/07-spread-model-training/07-CONTEXT.md
+Last session: 2026-03-23T15:21:04Z
+Stopped at: Completed 07-01-PLAN.md
+Resume file: .planning/phases/07-spread-model-training/07-02-PLAN.md
