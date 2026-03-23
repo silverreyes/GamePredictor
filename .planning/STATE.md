@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Point Spread Model
-status: executing
-stopped_at: Completed 07-02-PLAN.md (Phase 7 complete)
-last_updated: "2026-03-23T15:35:07.101Z"
-last_activity: 2026-03-23 -- Completed 07-02 spread experiment sweep (Phase 7 done)
+status: completed
+stopped_at: Completed 07-03-PLAN.md (Phase 7 fully complete, TRAIN-04 gap closed)
+last_updated: "2026-03-23T15:56:42.911Z"
+last_activity: 2026-03-23 -- Completed 07-03 gap closure (Phase 7 fully complete)
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 3
+  completed_plans: 3
   percent: 25
 ---
 
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 
 Phase: 8 of 10 (Database and API Integration) -- second phase of v1.1
 Plan: 1 of ? (Phase 8 plans TBD)
-Status: Phase 7 complete, ready for Phase 8
-Last activity: 2026-03-23 -- Completed 07-02 spread experiment sweep (Phase 7 done)
+Status: Phase 7 fully complete (gap closure done), ready for Phase 8
+Last activity: 2026-03-23 -- Completed 07-03 gap closure (TRAIN-04 fully satisfied)
 
-Progress: [##░░░░░░░░] 25% (2/2 plans in Phase 7, 1/4 v1.1 phases)
+Progress: [██████████] 100% (3/3 plans in Phase 7, 1/4 v1.1 phases)
 
 ## Performance Metrics
 
@@ -45,6 +45,7 @@ Progress: [##░░░░░░░░] 25% (2/2 plans in Phase 7, 1/4 v1.1 phase
 |-------|------|----------|-------|-------|
 | 07 | 01 | 36min | 2 | 3 |
 | 07 | 02 | 6min | 2 | 4 |
+| 07 | 03 | 2min | 2 | 2 |
 
 ## Accumulated Context
 
@@ -68,6 +69,7 @@ Full decision log in PROJECT.md Key Decisions table.
 - 07-02: Ship Exp 1 as production model -- no experiment beat baseline by >= 0.1 MAE (Exp 3 closest at 0.098)
 - 07-02: Skip Exp 5 -- none of Exps 2-4 showed sufficient improvement to warrant combination
 - 07-02: Fixed params.pop() mutation bug -- pass dict copy to preserve objective in JSONL log
+- 07-03: Patched existing Exp 2 JSONL entry in-place rather than appending duplicate re-run entry
 
 ### Pending Todos
 
@@ -79,6 +81,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-23T15:35:07.099Z
-Stopped at: Completed 07-02-PLAN.md (Phase 7 complete)
-Resume file: Phase 8 context/research/planning needed
+Last session: 2026-03-23T15:56:42.909Z
+Stopped at: Completed 07-03-PLAN.md (Phase 7 fully complete, TRAIN-04 gap closed)
+Resume file: None
