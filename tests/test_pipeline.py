@@ -286,6 +286,123 @@ def test_cache_invalidation(
 # ---------------------------------------------------------------------------
 # Test: worker schedule configuration
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Test: step 5 generates spread predictions
+# ---------------------------------------------------------------------------
+@patch("models.predict.generate_spread_predictions", return_value=[{"game_id": "g1"}])
+@patch("models.predict.detect_current_week", return_value=(2024, 5))
+@patch("models.predict.get_best_spread_experiment", return_value={"experiment_id": 42})
+@patch("models.predict.load_best_spread_model")
+def test_step5_generates_spread_predictions(
+    mock_load_spread,
+    mock_get_exp,
+    mock_detect,
+    mock_generate,
+):
+    """Step 5 should call all 4 spread functions with correct args."""
+    from pipeline.refresh import generate_current_spread_predictions
+
+    engine = MagicMock()
+    spread_model_path = "/path/spread.json"
+    spread_experiments_path = "/path/spread_exp.jsonl"
+
+    generate_current_spread_predictions(engine, spread_model_path, spread_experiments_path)
+
+    mock_load_spread.assert_called_once_with(spread_model_path)
+    mock_get_exp.assert_called_once_with(spread_experiments_path)
+    mock_detect.assert_called_once_with(engine)
+    mock_generate.assert_called_once_with(
+        mock_load_spread.return_value, 2024, 5, engine, model_id=42,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test: step 5 failure is non-fatal in run_pipeline
+# ---------------------------------------------------------------------------
+@patch("pipeline.refresh.get_engine")
+@patch("pipeline.refresh.ingest_new_data")
+@patch("pipeline.refresh.recompute_features")
+@patch("pipeline.refresh.retrain_and_stage")
+@patch("pipeline.refresh.generate_current_predictions")
+@patch("pipeline.refresh.generate_current_spread_predictions", side_effect=RuntimeError("spread failed"))
+def test_step5_nonfatal_in_run_pipeline(
+    mock_spread,
+    mock_predict,
+    mock_retrain,
+    mock_features,
+    mock_ingest,
+    mock_engine,
+):
+    """Step 5 failure should NOT prevent pipeline from completing."""
+    from pipeline.refresh import run_pipeline
+
+    mock_engine.return_value = MagicMock()
+    run_pipeline()  # Should NOT raise
+
+    # Earlier steps should still have been called
+    mock_ingest.assert_called_once()
+    mock_predict.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Test: step 5 offseason skips spread generation
+# ---------------------------------------------------------------------------
+@patch("models.predict.generate_spread_predictions")
+@patch("models.predict.detect_current_week", return_value=None)
+@patch("models.predict.get_best_spread_experiment", return_value={"experiment_id": 1})
+@patch("models.predict.load_best_spread_model")
+def test_step5_offseason_skips(
+    mock_load_spread,
+    mock_get_exp,
+    mock_detect,
+    mock_generate,
+):
+    """Offseason (detect_current_week returns None) should skip spread predictions."""
+    from pipeline.refresh import generate_current_spread_predictions
+
+    engine = MagicMock()
+    generate_current_spread_predictions(engine, "p", "e")
+
+    mock_generate.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Test: run_pipeline reads spread env vars
+# ---------------------------------------------------------------------------
+@patch("pipeline.refresh.get_engine")
+@patch("pipeline.refresh.ingest_new_data")
+@patch("pipeline.refresh.recompute_features")
+@patch("pipeline.refresh.retrain_and_stage")
+@patch("pipeline.refresh.generate_current_predictions")
+@patch("pipeline.refresh.generate_current_spread_predictions")
+def test_run_pipeline_reads_spread_env_vars(
+    mock_spread,
+    mock_predict,
+    mock_retrain,
+    mock_features,
+    mock_ingest,
+    mock_engine,
+    monkeypatch,
+):
+    """run_pipeline should pass SPREAD_MODEL_PATH and SPREAD_EXPERIMENTS_PATH env vars to step 5."""
+    monkeypatch.setenv("SPREAD_MODEL_PATH", "/vol/spread.json")
+    monkeypatch.setenv("SPREAD_EXPERIMENTS_PATH", "/vol/spread_exp.jsonl")
+
+    from pipeline.refresh import run_pipeline
+
+    mock_engine.return_value = MagicMock()
+    run_pipeline()
+
+    mock_spread.assert_called_once()
+    call_args = mock_spread.call_args
+    # positional args: (engine, spread_model_path, spread_experiments_path)
+    assert call_args[0][1] == "/vol/spread.json"
+    assert call_args[0][2] == "/vol/spread_exp.jsonl"
+
+
+# ---------------------------------------------------------------------------
+# Test: worker schedule configuration
+# ---------------------------------------------------------------------------
 def test_worker_schedule_config(monkeypatch):
     """Verifies CronTrigger with day_of_week='tue' and configurable hour from env."""
     monkeypatch.setenv("REFRESH_CRON_HOUR", "10")
