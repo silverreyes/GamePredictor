@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Point Spread Model
 status: executing
-stopped_at: Completed 07-01-PLAN.md
-last_updated: "2026-03-23T15:21:04Z"
-last_activity: 2026-03-23 -- Completed 07-01 spread training hardening
+stopped_at: Completed 07-02-PLAN.md (Phase 7 complete)
+last_updated: "2026-03-23T15:35:07.101Z"
+last_activity: 2026-03-23 -- Completed 07-02 spread experiment sweep (Phase 7 done)
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
-  percent: 12
+  completed_plans: 2
+  percent: 25
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** Pre-game win/loss predictions with calibrated confidence scores that beat trivial baselines on the 2023 validation season
-**Current focus:** v1.1 Point Spread Model -- Phase 7: Spread Model Training
+**Current focus:** v1.1 Point Spread Model -- Phase 8: Database and API Integration
 
 ## Current Position
 
-Phase: 7 of 10 (Spread Model Training) -- first phase of v1.1
-Plan: 2 of 2 (next: 07-02-PLAN.md)
-Status: Executing Phase 7
-Last activity: 2026-03-23 -- Completed 07-01 spread training hardening
+Phase: 8 of 10 (Database and API Integration) -- second phase of v1.1
+Plan: 1 of ? (Phase 8 plans TBD)
+Status: Phase 7 complete, ready for Phase 8
+Last activity: 2026-03-23 -- Completed 07-02 spread experiment sweep (Phase 7 done)
 
-Progress: [#░░░░░░░░░] 12% (1/2 plans in Phase 7, 0/4 v1.1 phases)
+Progress: [##░░░░░░░░] 25% (2/2 plans in Phase 7, 1/4 v1.1 phases)
 
 ## Performance Metrics
 
@@ -44,6 +44,7 @@ Progress: [#░░░░░░░░░] 12% (1/2 plans in Phase 7, 0/4 v1.1 pha
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 07 | 01 | 36min | 2 | 3 |
+| 07 | 02 | 6min | 2 | 4 |
 
 ## Accumulated Context
 
@@ -64,6 +65,9 @@ Full decision log in PROJECT.md Key Decisions table.
 - 07-01: Used params.pop() to extract objective from hyperparams dict, enabling alternative loss functions
 - 07-01: Created spread_program.md with Exp 1 baselines and experiment queue (Exps 2-5)
 - 07-01: 14-test suite covering all 5 TRAIN requirements (temporal split, metrics, baselines, logging, model save)
+- 07-02: Ship Exp 1 as production model -- no experiment beat baseline by >= 0.1 MAE (Exp 3 closest at 0.098)
+- 07-02: Skip Exp 5 -- none of Exps 2-4 showed sufficient improvement to warrant combination
+- 07-02: Fixed params.pop() mutation bug -- pass dict copy to preserve objective in JSONL log
 
 ### Pending Todos
 
@@ -75,6 +79,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-23T15:21:04Z
-Stopped at: Completed 07-01-PLAN.md
-Resume file: .planning/phases/07-spread-model-training/07-02-PLAN.md
+Last session: 2026-03-23T15:35:07.099Z
+Stopped at: Completed 07-02-PLAN.md (Phase 7 complete)
+Resume file: Phase 8 context/research/planning needed

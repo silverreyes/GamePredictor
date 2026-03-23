@@ -25,7 +25,7 @@ Full details archived to `milestones/v1.0-ROADMAP.md`
 
 **Milestone Goal:** Add an XGBoost regression model that predicts point spread (margin of victory) alongside the existing win/loss classifier, integrated across API, dashboard, and pipeline.
 
-- [ ] **Phase 7: Spread Model Training** - Formalize prototype into production-grade training with validated metrics and experiment logging
+- [x] **Phase 7: Spread Model Training** - Formalize prototype into production-grade training with validated metrics and experiment logging
 - [ ] **Phase 8: Database and API Integration** - Spread predictions table and API endpoints serving spread data alongside classifier
 - [ ] **Phase 9: Dashboard Integration** - PickCards show spread predictions side-by-side with classifier, plus spread performance metrics
 - [ ] **Phase 10: Pipeline and Production Deployment** - Weekly spread inference, historical seeding, and production deploy
@@ -45,7 +45,7 @@ Full details archived to `milestones/v1.0-ROADMAP.md`
 **Plans:** 2 plans
 Plans:
 - [x] 07-01-PLAN.md -- Production hardening: fix objective function, create spread_program.md, write test suite
-- [ ] 07-02-PLAN.md -- Run 3-5 experiment sweep, update program document with results
+- [x] 07-02-PLAN.md -- Run 3-5 experiment sweep, update program document with results
 
 ### Phase 8: Database and API Integration
 **Goal**: Spread predictions are stored in the database and served via API endpoints alongside the existing classifier predictions
@@ -91,7 +91,7 @@ Plans:
 | 4. Prediction API | v1.0 | 2/2 | Complete | 2026-03-17 |
 | 5. Dashboard | v1.0 | 2/2 | Complete | 2026-03-17 |
 | 6. Pipeline and Deployment | v1.0 | 3/3 | Complete | 2026-03-22 |
-| 7. Spread Model Training | v1.1 | 1/2 | In progress | - |
+| 7. Spread Model Training | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 8. Database and API Integration | v1.1 | 0/? | Not started | - |
 | 9. Dashboard Integration | v1.1 | 0/? | Not started | - |
 | 10. Pipeline and Production Deployment | v1.1 | 0/? | Not started | - |
