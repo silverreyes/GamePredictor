@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Point Spread Model
 status: executing
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-03-23T18:15:14.605Z"
-last_activity: 2026-03-23 -- Completed 07-03 gap closure (TRAIN-04 fully satisfied)
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-03-23T19:57:51.551Z"
+last_activity: 2026-03-23 -- Completed 08-02 spread API wiring (Phase 8 complete)
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
-  percent: 80
+  completed_plans: 5
+  percent: 50
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** Pre-game win/loss predictions with calibrated confidence scores that beat trivial baselines on the 2023 validation season
-**Current focus:** v1.1 Point Spread Model -- Phase 8: Database and API Integration
+**Current focus:** v1.1 Point Spread Model -- Phase 8 complete, ready for Phase 9
 
 ## Current Position
 
-Phase: 8 of 10 (Database and API Integration) -- second phase of v1.1
-Plan: 2 of 2 (Phase 8)
-Status: Executing Phase 8 plan 2
-Last activity: 2026-03-23 -- Completed 08-01 spread prediction foundation
+Phase: 8 of 10 (Database and API Integration) -- COMPLETE
+Plan: 2 of 2 (Phase 8) -- COMPLETE
+Status: Phase 8 complete, ready for Phase 9
+Last activity: 2026-03-23 -- Completed 08-02 spread API wiring (Phase 8 complete)
 
-Progress: [█████████░] 50% (1/2 plans in Phase 8, 1.5/4 v1.1 phases)
+Progress: [██████████] 100% (2/2 plans in Phase 8, 2/4 v1.1 phases)
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Progress: [█████████░] 50% (1/2 plans in Phase 8, 1.5/4 v1.1
 | 07 | 02 | 6min | 2 | 4 |
 | 07 | 03 | 2min | 2 | 2 |
 | 08 | 01 | 5min | 2 | 5 |
+| 08 | 02 | 11min | 2 | 7 |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Full decision log in PROJECT.md Key Decisions table.
 **v1.1 Phase 8:**
 - 08-01: Mirrored classifier function patterns for spread (load/select/generate) for consistency
 - 08-01: Home-team convention for zero spread (predicted_spread == 0.0 -> home wins)
+- 08-02: Spread endpoint uses path params {season}/{week} matching URL hierarchy convention
+- 08-02: Spread reload generates predictions only when both current week and spread info available
 
 **v1.1 Phase 7:**
 - 07-01: Used params.pop() to extract objective from hyperparams dict, enabling alternative loss functions
@@ -86,6 +89,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-23T19:42:20Z
-Stopped at: Completed 08-01-PLAN.md
-Resume file: .planning/phases/08-database-and-api-integration/08-02-PLAN.md
+Last session: 2026-03-23T19:56:52Z
+Stopped at: Completed 08-02-PLAN.md
+Resume file: Phase 9 planning

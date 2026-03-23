@@ -18,9 +18,9 @@ Requirements for the Point Spread Model milestone. Each maps to roadmap phases.
 ### Database & API
 
 - [x] **API-01**: spread_predictions table stores per-game spread predictions with predicted_spread, predicted_winner, model_id, and post-game actuals
-- [ ] **API-02**: GET /api/predictions/spreads/week/{season}/{week} returns spread predictions per game for a given week
-- [ ] **API-03**: GET /api/model/info includes spread model metadata (MAE, training date) alongside classifier info
-- [ ] **API-04**: Spread model is loaded at API startup alongside the classifier via the lifespan handler
+- [x] **API-02**: GET /api/predictions/spreads/week/{season}/{week} returns spread predictions per game for a given week
+- [x] **API-03**: GET /api/model/info includes spread model metadata (MAE, training date) alongside classifier info
+- [x] **API-04**: Spread model is loaded at API startup alongside the classifier via the lifespan handler
 
 ### Dashboard
 
@@ -78,9 +78,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TRAIN-04 | Phase 7 | Complete |
 | TRAIN-05 | Phase 7 | Complete |
 | API-01 | Phase 8 | Complete |
-| API-02 | Phase 8 | Pending |
-| API-03 | Phase 8 | Pending |
-| API-04 | Phase 8 | Pending |
+| API-02 | Phase 8 | Complete |
+| API-03 | Phase 8 | Complete |
+| API-04 | Phase 8 | Complete |
 | DASH-01 | Phase 9 | Pending |
 | DASH-02 | Phase 9 | Pending |
 | DASH-03 | Phase 9 | Pending |
