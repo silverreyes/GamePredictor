@@ -442,7 +442,7 @@ def run_spread_experiment():
     X_val_2021 = val_2021[active_features]
     y_val_2021 = val_2021["spread_target"]
 
-    # Train and evaluate
+    # Train and evaluate (pass a copy -- train_and_evaluate_spread pops 'objective')
     results, model = train_and_evaluate_spread(
         X_train,
         y_train,
@@ -452,7 +452,7 @@ def run_spread_experiment():
         y_val_2022,
         X_val_2021,
         y_val_2021,
-        EXPERIMENT_PARAMS,
+        {**EXPERIMENT_PARAMS},
     )
 
     # Compute baselines
