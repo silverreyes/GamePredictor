@@ -68,6 +68,13 @@ class SpreadWeekResponse(BaseModel):
     predictions: list[SpreadPredictionResponse]
 
 
+class SpreadHistoryResponse(BaseModel):
+    """Response for GET /api/predictions/spreads/history."""
+
+    season: int
+    predictions: list[SpreadPredictionResponse]
+
+
 class SpreadModelInfo(BaseModel):
     """Spread model metadata nested in ModelInfoResponse."""
 
