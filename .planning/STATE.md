@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Point Spread Model
-status: completed
-stopped_at: Phase 8 context gathered
+status: executing
+stopped_at: Completed 08-01-PLAN.md
 last_updated: "2026-03-23T18:15:14.605Z"
 last_activity: 2026-03-23 -- Completed 07-03 gap closure (TRAIN-04 fully satisfied)
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  total_plans: 5
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 ## Current Position
 
 Phase: 8 of 10 (Database and API Integration) -- second phase of v1.1
-Plan: 1 of ? (Phase 8 plans TBD)
-Status: Phase 7 fully complete (gap closure done), ready for Phase 8
-Last activity: 2026-03-23 -- Completed 07-03 gap closure (TRAIN-04 fully satisfied)
+Plan: 2 of 2 (Phase 8)
+Status: Executing Phase 8 plan 2
+Last activity: 2026-03-23 -- Completed 08-01 spread prediction foundation
 
-Progress: [██████████] 100% (3/3 plans in Phase 7, 1/4 v1.1 phases)
+Progress: [█████████░] 50% (1/2 plans in Phase 8, 1.5/4 v1.1 phases)
 
 ## Performance Metrics
 
@@ -46,6 +46,7 @@ Progress: [██████████] 100% (3/3 plans in Phase 7, 1/4 v1.1 
 | 07 | 01 | 36min | 2 | 3 |
 | 07 | 02 | 6min | 2 | 4 |
 | 07 | 03 | 2min | 2 | 2 |
+| 08 | 01 | 5min | 2 | 5 |
 
 ## Accumulated Context
 
@@ -61,6 +62,10 @@ Full decision log in PROJECT.md Key Decisions table.
 **v1.1 prototyping:**
 - Spread training script (train_spread.py) mirrors classifier structure, loads target from parquet cache (no DB needed for training)
 - Spread Exp 1 baseline: MAE 10.68, RMSE 13.87, derived win accuracy 60.16% (vs classifier 62.89%)
+
+**v1.1 Phase 8:**
+- 08-01: Mirrored classifier function patterns for spread (load/select/generate) for consistency
+- 08-01: Home-team convention for zero spread (predicted_spread == 0.0 -> home wins)
 
 **v1.1 Phase 7:**
 - 07-01: Used params.pop() to extract objective from hyperparams dict, enabling alternative loss functions
@@ -81,6 +86,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-23T18:15:14.602Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-database-and-api-integration/08-CONTEXT.md
+Last session: 2026-03-23T19:42:20Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: .planning/phases/08-database-and-api-integration/08-02-PLAN.md

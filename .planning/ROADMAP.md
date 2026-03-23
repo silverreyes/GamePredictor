@@ -59,7 +59,7 @@ Plans:
   4. The spread model loads automatically at API startup via the lifespan handler without manual intervention
 **Plans:** 2 plans
 Plans:
-- [ ] 08-01-PLAN.md -- Spread prediction foundation: DDL, predict.py functions, schemas, config, tests
+- [x] 08-01-PLAN.md -- Spread prediction foundation: DDL, predict.py functions, schemas, config, tests
 - [ ] 08-02-PLAN.md -- API wiring: spreads route, lifespan loading, model info/reload extension, API tests
 
 ### Phase 9: Dashboard Integration
@@ -96,6 +96,6 @@ Plans:
 | 5. Dashboard | v1.0 | 2/2 | Complete | 2026-03-17 |
 | 6. Pipeline and Deployment | v1.0 | 3/3 | Complete | 2026-03-22 |
 | 7. Spread Model Training | v1.1 | 3/3 | Complete | 2026-03-23 |
-| 8. Database and API Integration | v1.1 | 0/2 | In progress | - |
+| 8. Database and API Integration | v1.1 | 1/2 | In progress | - |
 | 9. Dashboard Integration | v1.1 | 0/? | Not started | - |
 | 10. Pipeline and Production Deployment | v1.1 | 0/? | Not started | - |
