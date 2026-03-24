@@ -26,9 +26,9 @@ Requirements for Design & Landing Page milestone. Each maps to roadmap phases.
 
 ### Navigation
 
-- [ ] **NAV-01**: Sidebar includes a Home tab linking to `/`
-- [ ] **NAV-02**: This Week page moves from `/` to `/this-week` route
-- [ ] **NAV-03**: All existing internal links and routes continue to work after restructure
+- [x] **NAV-01**: Sidebar includes a Home tab linking to `/`
+- [x] **NAV-02**: This Week page moves from `/` to `/this-week` route
+- [x] **NAV-03**: All existing internal links and routes continue to work after restructure
 
 ### Experiments Redesign
 
@@ -70,9 +70,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | DSGN-02 | Phase 11 | Pending |
 | DSGN-03 | Phase 11 | Pending |
 | DSGN-04 | Phase 11 | Pending |
-| NAV-01 | Phase 12 | Pending |
-| NAV-02 | Phase 12 | Pending |
-| NAV-03 | Phase 12 | Pending |
+| NAV-01 | Phase 12 | Complete |
+| NAV-02 | Phase 12 | Complete |
+| NAV-03 | Phase 12 | Complete |
 | LAND-01 | Phase 13 | Pending |
 | LAND-02 | Phase 13 | Pending |
 | LAND-03 | Phase 13 | Pending |
