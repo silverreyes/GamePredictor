@@ -38,7 +38,7 @@ Full details archived to `milestones/v1.1-ROADMAP.md`
 
 **Milestone Goal:** Align the Nostradamus dashboard with the silverreyes.net design system, add a proper landing page as the new front door, and redesign the experiments view for readability.
 
-- [ ] **Phase 11: Design System Foundation** - Migrate dashboard to silverreyes.net warm amber palette, typography, and semantic tokens
+- [x] **Phase 11: Design System Foundation** - Migrate dashboard to silverreyes.net warm amber palette, typography, and semantic tokens (completed 2026-03-24)
 - [ ] **Phase 12: Route Restructure and Navigation** - Move This Week to `/this-week`, add Home nav item, landing page route at `/`
 - [ ] **Phase 13: Landing Page** - Hero section, how-it-works explainer, explore CTAs, and footer at `/`
 - [ ] **Phase 14: Experiments Redesign** - Full descriptions, proper column alignment, hybrid summary+detail layout
@@ -123,7 +123,7 @@ Note: Phases 13 and 14 are independent and could execute in either order once 11
 | 8. Database and API Integration | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 9. Dashboard Integration | v1.1 | 3/3 | Complete | 2026-03-23 |
 | 10. Pipeline and Production Deployment | v1.1 | 2/2 | Complete | 2026-03-24 |
-| 11. Design System Foundation | v1.2 | 0/2 | Not started | - |
+| 11. Design System Foundation | 2/2 | Complete    | 2026-03-24 | - |
 | 12. Route Restructure and Navigation | v1.2 | 0/0 | Not started | - |
 | 13. Landing Page | v1.2 | 0/0 | Not started | - |
 | 14. Experiments Redesign | v1.2 | 0/0 | Not started | - |
