@@ -276,6 +276,41 @@ def generate_current_predictions(engine, model_path, experiments_path):
     logger.info("Generated %d predictions", len(predictions))
 
 
+def generate_current_spread_predictions(engine, spread_model_path, spread_experiments_path):
+    """Step 5: Generate spread predictions for the current week.
+
+    Non-fatal: if this step fails, classifier predictions from step 4
+    are still valid and the pipeline continues.
+    """
+    from models.predict import (
+        detect_current_week,
+        generate_spread_predictions,
+        get_best_spread_experiment,
+        load_best_spread_model,
+    )
+
+    # Load spread model
+    spread_model = load_best_spread_model(spread_model_path)
+
+    # Get best spread experiment for model_id
+    best_exp = get_best_spread_experiment(spread_experiments_path)
+    model_id = best_exp["experiment_id"] if best_exp else None
+
+    # Detect current week (reuse same function as step 4)
+    current = detect_current_week(engine)
+    if current is None:
+        logger.info("Offseason detected -- skipping spread prediction generation")
+        return
+
+    season, week = current
+    logger.info("Generating spread predictions for season %d, week %d...", season, week)
+
+    predictions = generate_spread_predictions(
+        spread_model, season, week, engine, model_id=model_id,
+    )
+    logger.info("Generated %d spread predictions", len(predictions))
+
+
 def run_pipeline():
     """Orchestrate the weekly refresh pipeline.
 
@@ -284,6 +319,7 @@ def run_pipeline():
     2. recompute_features -- FATAL: failure stops pipeline
     3. retrain_and_stage -- NON-FATAL: failure logged, continues to step 4
     4. generate_current_predictions -- failure logged
+    5. generate_current_spread_predictions -- NON-FATAL: failure logged
     """
     start = datetime.now(timezone.utc).isoformat()
     logger.info("Pipeline started at %s", start)
@@ -293,6 +329,8 @@ def run_pipeline():
     model_path = os.environ.get("MODEL_PATH", "models/artifacts/best_model.json")
     experiments_path = os.environ.get("EXPERIMENTS_PATH", "models/experiments.jsonl")
     model_dir = os.path.dirname(model_path)
+    spread_model_path = os.environ.get("SPREAD_MODEL_PATH", "models/artifacts/best_spread_model.json")
+    spread_experiments_path = os.environ.get("SPREAD_EXPERIMENTS_PATH", "models/spread_experiments.jsonl")
 
     # Step 1: Ingest (fatal)
     try:
@@ -319,6 +357,12 @@ def run_pipeline():
         generate_current_predictions(engine, model_path, experiments_path)
     except Exception:
         logger.exception("Step 4 FAILED: generate_current_predictions")
+
+    # Step 5: Generate spread predictions (non-fatal)
+    try:
+        generate_current_spread_predictions(engine, spread_model_path, spread_experiments_path)
+    except Exception:
+        logger.exception("Step 5 FAILED (non-fatal): generate_current_spread_predictions -- continuing")
 
     end = datetime.now(timezone.utc).isoformat()
     logger.info("Pipeline finished at %s", end)
