@@ -29,7 +29,8 @@ interface WeekBreakdown {
 export function AccuracyPage() {
   const historyQuery = usePredictionHistory();
   const modelQuery = useModelInfo();
-  const spreadHistoryQuery = useSpreadHistory();
+  const hasSpreadModel = modelQuery.data?.spread_model != null;
+  const spreadHistoryQuery = useSpreadHistory(undefined, hasSpreadModel);
 
   useEffect(() => {
     document.title = "Season Accuracy - NFL Predictor";

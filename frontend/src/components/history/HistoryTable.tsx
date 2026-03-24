@@ -20,6 +20,34 @@ function formatSpread(value: number): string {
   return `${sign}${value.toFixed(1)}`;
 }
 
+function getSpreadErrorColor(error: number): string {
+  if (error <= 3) return "text-green-400";
+  if (error <= 7) return "text-amber-400";
+  return "text-red-400";
+}
+
+function SpreadCell({ spread }: { spread: SpreadPredictionResponse }) {
+  const predicted = `${spread.home_team} ${formatSpread(spread.predicted_spread)}`;
+
+  if (spread.actual_spread == null || spread.actual_winner == null) {
+    return <span>{predicted}</span>;
+  }
+
+  const margin = Math.abs(spread.actual_spread);
+  const error = Math.abs(spread.predicted_spread - spread.actual_spread);
+  const actualText =
+    margin === 0 ? "Tie" : `${spread.actual_winner} by ${Math.round(margin)}`;
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span>{predicted}</span>
+      <span className={`text-xs ${getSpreadErrorColor(error)}`}>
+        → {actualText}
+      </span>
+    </div>
+  );
+}
+
 function formatDate(gameDate: string | null): string {
   if (!gameDate) return "-";
   const date = new Date(gameDate);
@@ -40,7 +68,7 @@ export function HistoryTable({ predictions, spreadByGameId }: HistoryTableProps)
             <TableHead>Matchup</TableHead>
             <TableHead className="w-[100px]">Pick</TableHead>
             <TableHead className="w-[100px]">Confidence</TableHead>
-            {spreadByGameId && <TableHead className="w-[80px]">Spread</TableHead>}
+            {spreadByGameId && <TableHead className="w-[140px]">Spread</TableHead>}
             <TableHead className="w-20">Result</TableHead>
             <TableHead className="w-[100px]">Actual</TableHead>
           </TableRow>
@@ -65,9 +93,11 @@ export function HistoryTable({ predictions, spreadByGameId }: HistoryTableProps)
               </TableCell>
               {spreadByGameId && (
                 <TableCell className="text-sm text-muted-foreground">
-                  {spreadByGameId[p.game_id]
-                    ? formatSpread(spreadByGameId[p.game_id].predicted_spread)
-                    : "-"}
+                  {spreadByGameId[p.game_id] ? (
+                    <SpreadCell spread={spreadByGameId[p.game_id]} />
+                  ) : (
+                    "-"
+                  )}
                 </TableCell>
               )}
               <TableCell>
