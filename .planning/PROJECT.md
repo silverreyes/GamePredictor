@@ -28,7 +28,15 @@ Pre-game win/loss and point spread predictions that beat trivial baselines, with
 
 ### Active
 
-(No active requirements -- awaiting next milestone)
+**Current Milestone: v1.2 Design & Landing Page**
+
+**Goal:** Align Nostradamus dashboard with silverreyes.net design system, add a proper landing page, and redesign the experiments view.
+
+**Target features:**
+- Design system alignment with silverreyes.net (palette, typography, visual language)
+- Home/landing page with hero, how-it-works, explore CTAs, and image placeholders
+- Experiments page redesign with full descriptions, proper column alignment
+- Off-season-aware default routing (Home instead of empty This Week)
 
 ### Out of Scope
 
@@ -78,7 +86,8 @@ Production: nostradamus.silverreyes.net via Caddy reverse proxy with automatic H
 | Integrated dashboard (not separate page) | Users see both predictions in context | Good -- unified PickCard view |
 | Sportsbook sign convention | Users expect negative=favorite, positive=underdog | Good -- corrected mid-v1.1 |
 | "Pick-Em" branding (hyphenated) | Avoids apostrophe encoding issues, clear to visitors | Good |
-| Over/under deferred to v1.2 | Keeps v1.1 scope focused | -- Pending |
+| Over/under deferred to v1.3 | Keeps v1.2 scope focused on design refresh | -- Pending |
+| silverreyes.net design system for Nostradamus | Cohesive brand across subdomains | -- Pending |
 
 ---
-*Last updated: 2026-03-24 after v1.1 milestone*
+*Last updated: 2026-03-24 after v1.2 milestone start*
