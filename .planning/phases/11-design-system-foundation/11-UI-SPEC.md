@@ -48,16 +48,20 @@ Exceptions: PickCard left border remains at 3px (existing pattern, not part of s
 | Role | Font | Size | Weight | Line Height | Usage |
 |------|------|------|--------|-------------|-------|
 | Body | IBM Plex Mono | 14px | 400 (regular) | 1.5 | Default body text, data values, navigation items, badges |
-| Label | IBM Plex Mono | 12px | 500 (medium) | 1.4 | Table headers, stat labels, muted captions |
+| Label | IBM Plex Mono | 12px | 400 (regular) | 1.4 | Table headers, stat labels, muted captions |
 | Heading | Syne | 20px | 700 (bold) | 1.2 | Page titles (h2, h3), section headings |
-| Display | Syne | 28px | 800 (extra-bold) | 1.1 | Hero text (Phase 13), primary h1 headings |
+| Display | Syne | 28px | 700 (bold) | 1.1 | Hero text (Phase 13), primary h1 headings |
+
+**Weight consolidation rationale:** Two weights provide sufficient hierarchy. Labels at 12px are already visually distinct from 14px body text through size alone -- adding a third weight (500) would be unnecessary. Display headings at 28px are already visually distinct from 20px headings through size alone -- weight 700 provides strong emphasis for both without requiring an 800 weight. This keeps font loading lean (fewer weight files) and avoids visual clutter from too many weight variations.
 
 ### Font Loading
 
 | Package | Weights Loaded | Why |
 |---------|---------------|-----|
-| @fontsource/syne | 400, 700, 800 | 400 fallback, 700 headings, 800 display/hero |
-| @fontsource/ibm-plex-mono | 300, 400, 500, 600 | 300 subtle, 400 body, 500 medium emphasis, 600 semi-bold labels |
+| @fontsource/syne | 400, 700 | 400 fallback body, 700 headings + display |
+| @fontsource/ibm-plex-mono | 400, 600 | 400 body + labels, 600 reserved for future bold mono emphasis if needed |
+
+Note: Only weights 400 and 700 are actively used in the type scale. IBM Plex Mono 600 is loaded as a safety margin but not assigned to any role. Syne 400 is loaded as a fallback for any edge case where Syne renders outside a heading context.
 
 ### Font Assignment Rules
 
