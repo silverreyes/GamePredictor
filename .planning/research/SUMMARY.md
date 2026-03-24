@@ -1,205 +1,171 @@
 # Project Research Summary
 
-**Project:** NFL Game Predictor
-**Domain:** Batch ML prediction system with experiment tracking, API serving, and dashboard
-**Researched:** 2026-03-15
-**Confidence:** MEDIUM
+**Project:** NFL Game Predictor (Nostradamus) — v1.2 Design & Landing Page
+**Domain:** Design system migration, public landing page, and experiments page redesign for an existing React dashboard
+**Researched:** 2026-03-24
+**Confidence:** HIGH
 
 ## Executive Summary
 
-The NFL Game Predictor is a batch machine learning pipeline that predicts pre-kickoff game outcomes using historical play-by-play data. Experts in this domain build it as a classic offline pipeline — ingest raw data, engineer leakage-free game-level features, train a gradient boosting classifier, and serve predictions via a REST API consumed by a React dashboard. The architecture is intentionally batch-oriented: there is no real-time inference, no streaming, and predictions update once per week. This constraint dramatically simplifies the system and is the correct choice for this problem.
+The v1.2 milestone is a frontend-only effort touching three distinct workstreams: aligning the dashboard's visual design with the silverreyes.net parent brand, adding a public-facing landing page, and redesigning the experiments page for better readability. All research confirms that the existing stack (React 19 + Vite 7 + Tailwind v4 + shadcn/ui) is already well-suited for these goals. The only new dependencies are two Fontsource packages for self-hosted fonts; everything else is CSS variable changes, routing adjustments, and new or modified React components. No backend changes are required.
 
-The recommended approach is to build in strict dependency order — data foundation before feature engineering before model training before API serving before the dashboard. Every phase has a hard dependency on the prior one, so attempting to parallelize or skip ahead will cause rework. The centerpiece of the project is the autoresearch experiment loop, where an AI agent iteratively modifies the training script and evaluates whether changes improve 2023 validation accuracy above the 53% benchmark. This loop requires careful governance to avoid overfitting to the validation season and infinite iteration cycles.
+The recommended approach follows a strict dependency chain: design tokens must be defined and all hardcoded color references migrated before any visual page work begins. Both the landing page and the experiments redesign build on the same token layer, so they can proceed in parallel once the design system phase is complete. The key architectural decision — placing the landing page outside AppLayout as a separate full-width route — is clear-cut and well-supported by React Router v7's nested route structure.
 
-The single highest-risk element of the entire project is data leakage in feature engineering. Using any future game data to compute features for a prior game inflates validation accuracy to 70%+ and makes the model worthless in production. Every rolling computation must strictly exclude the current game using `.shift(1)` or explicit temporal SQL window filters, and this must be enforced with automated tests from the first day of feature engineering. Secondary risks include nfl-data-py schema inconsistencies across seasons, overfitting the autoresearch loop to the 2023 validation season, and the experiment loop degenerating without hard termination conditions.
+The primary risk is the 48 hardcoded Tailwind color utility classes scattered across 16 files that bypass the CSS variable system. If the palette is swapped before these are migrated to semantic tokens, the dashboard will visually split between components that respond to the new palette and those that do not. The prevention strategy is established: define semantic tokens first, migrate all hardcoded references in a single dedicated pass, then swap the underlying palette values. A secondary risk is the experiments page redesign losing comparison capability if tables are replaced with cards outright; research recommends improving the table rather than replacing it, or using a hybrid approach.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The stack is cohesive and well-justified. Python 3.11 is specified in project constraints and is the safe choice — 3.11 offers 10-60% performance gains over 3.10 while maintaining broad ML library compatibility. The ML pipeline centers on XGBoost 2.0+ (project-specified, best-in-class for tabular data), with scikit-learn for preprocessing utilities and MLflow for experiment tracking. FastAPI serves predictions via an async REST API, and React 18 with TypeScript powers the dashboard. PostgreSQL 16 is the single data store — raw play-by-play, engineered features, predictions, and MLflow metadata all live in the same Postgres instance. The entire system runs in Docker Compose.
-
-Notable stack decisions: use `psycopg3` (not psycopg2, which is maintenance-only), SQLAlchemy 2.0 style (DeclarativeBase, not legacy 1.x patterns), Vite (not Create React App, which is unmaintained), and APScheduler (not Celery — the project has exactly one scheduled task and does not need a message broker). Avoid neural networks for this problem; XGBoost consistently outperforms deep learning on tabular NFL data at this scale (~5,400 game-rows).
+The existing stack requires no structural changes. Only two new npm packages are needed: `@fontsource/syne` and `@fontsource/ibm-plex-mono`, which self-host the fonts matching the silverreyes.net brand identity and eliminate the current render-blocking Google Fonts CDN import. All other changes are CSS variable overrides in `src/index.css` and React component additions. See `.planning/research/STACK.md` for full details.
 
 **Core technologies:**
-- Python 3.11: Runtime — project-specified, best ML library compatibility, significant perf gains over 3.10
-- XGBoost 2.0+: Primary classifier — project-specified, best-in-class for tabular structured data
-- nfl-data-py: Data source — free, no API key, provides play-by-play and schedule data via nflverse
-- pandas 2.1+ / pyarrow 14+: Data processing — required by nfl-data-py, Copy-on-Write perf, memory-efficient parquet I/O
-- PostgreSQL 16: Data store — project-specified, handles raw PBP (~14M rows), features, predictions, MLflow metadata
-- SQLAlchemy 2.0 + Alembic: ORM and migrations — type-safe, reproducible schema management
-- MLflow 2.12+: Experiment tracking — project-specified, self-hosted in Docker Compose, zero-config XGBoost autolog
-- FastAPI 0.110+: REST API — project-specified, async-native, automatic OpenAPI docs, Pydantic validation
-- React 18 + TypeScript + Vite: Dashboard — project-specified, functional components + hooks, strict mode TypeScript
-- TanStack Query 5+: Dashboard data fetching — handles caching, polling (5-min refetch), loading states
-- Docker Compose 2.24+: Orchestration — project-specified, single file for all services
+- `@fontsource/syne` + `@fontsource/ibm-plex-mono`: Self-hosted display and mono fonts — eliminates the render-blocking Google Fonts `@import`, bundles fonts into the Vite build, matches silverreyes.net typographic identity
+- `tw-animate-css` (already installed): Hero entrance animations — covers all needed fade/slide/stagger effects without adding Framer Motion (~30KB savings)
+- shadcn/ui CSS variable system (already installed): Zero-component-code theme migration — the entire dashboard re-themes by changing `:root` and `.dark` CSS variable values in `index.css`
+- `react-router` v7 (already installed): Two-layout routing pattern — supports sibling route groups cleanly, no new packages needed for the full-width LandingLayout pattern
+
+**Critical version note:** Tailwind v4 eliminated `tailwind.config.ts` in favor of CSS-first `@theme` directives. All theme customization must go through `index.css`. Adding a config file would create a v3/v4 hybrid that breaks tooling.
 
 ### Expected Features
 
+Research classifies features into must-ship for v1.2 and items to defer. See `.planning/research/FEATURES.md` for the full prioritized table.
+
 **Must have (table stakes):**
-- EPA per play (offensive + defensive, rolling 4-8 games) — the gold-standard NFL metric, available in nfl-data-py; highest predictive value
-- Point differential rolling average — direct outcome proxy, strong signal
-- Turnover differential rolling average — one of the top-5 predictors in published NFL models
-- Home/away indicator — consistent ~2.5 point advantage, always available
-- Rest days / bye week indicator — measurable performance effect for short-rest games
-- Win/loss streak and season win percentage — team momentum and quality proxy
-- Third-down conversion rate (off + def, rolling) — execution quality proxy
-- Binary win/loss prediction with confidence score — the core product output
-- Historical accuracy tracking vs. naive baselines — users cannot trust a model without seeing its track record and how it compares to "always pick the home team"
-- This week's picks dashboard view — primary user-facing interface
-- Experiment comparison scoreboard — required for the autoresearch loop workflow
-- Per-experiment metrics logging (accuracy, log loss, AUC, Brier score) to experiments.jsonl
+- Design system token migration to silverreyes.net warm amber palette — without this, the subdomain feels disconnected from the parent brand
+- Landing page with hero (headline + accuracy stat), how-it-works 3-step explainer, and explore CTAs — this is the new front door; the current off-season empty state as entry point is unacceptable
+- Route restructure: `/` to landing page, `/this-week` to ThisWeekPage — permanently solves the off-season routing problem
+- Accent color and border token migration across all components — replaces all hardcoded `blue-400`/`zinc-800` references with semantic tokens
+- Experiments page: full hypothesis text display and improved layout — the current 60-char truncation cuts off the most important context per experiment
 
-**Should have (competitive differentiators):**
-- Calibrated probabilities (Platt scaling or isotonic regression) — raw XGBoost probabilities are often poorly calibrated; "70% confidence" should mean 70% win rate historically
-- SHAP feature importance per prediction — explainability builds trust and helps debug leakage
-- Confidence tiers (high/medium/low) — high UX value, low implementation cost
-- Weekly recap view with correct/incorrect highlighting — engagement driver after game results
-- Model performance over time chart — reveals drift and improvement trajectory
-- Success rate (% positive EPA plays) — captures consistency beyond raw averages
-- Weighted rolling averages with recency decay — recent games more predictive than Week 1
+**Should have (differentiators):**
+- Live hero stat from API (current accuracy from `useModelInfo` hook, falls back to static gracefully)
+- Delta from previous best on experiment cards (`prev_best_acc` field already exists in the response type)
+- Smooth theme transition (`transition: background-color 0.2s` on body/cards)
+- Sidebar "Home" link and updated branding
 
-**Defer to v2+:**
-- Player-level features (injury tracking, individual performance) — unreliable data, far higher complexity
-- Vegas odds integration — data licensing complexity, conflates market signal with model signal
-- Live in-game win probability — entirely different architecture (real-time streaming)
-- Multi-model ensembles — premature until single-model behavior is deeply understood
-- Team deep-dive pages — high frontend effort, not essential for v1
-- Mobile app — responsive web covers this adequately for v1
+**Defer to v1.3+:**
+- Theme toggle (dark/light): requires defining complete light-mode token set and testing all components; ship dark-only for v1.2
+- Spread experiments display: requires new API endpoint and different metric schemas (accuracy vs MAE)
+- Experiment timeline visualization: polish feature; table/card improvement is the priority
+- Animated scroll transitions for how-it-works: CSS-only addition that can be layered on after content is finalized
 
 ### Architecture Approach
 
-The system is a batch ML pipeline with an API serving layer — a well-understood architecture pattern. Six components are cleanly separated: (1) data ingestion writes raw data to PostgreSQL only; (2) feature engineering reads raw tables and writes a leakage-safe game_features table; (3) the model training + autoresearch loop reads game_features, modifies only models/train.py, and logs to both experiments.jsonl and MLflow; (4) the prediction API reads game_features and model artifacts, never writes features or trains; (5) the React dashboard is a pure presentation layer that hits the API only; (6) a weekly pipeline orchestrator calls the other components in sequence. The clean component boundaries exist specifically to protect the leakage guarantees — the autoresearch agent modifies only train.py and can never touch the feature engineering code.
+The migration follows a single-file-of-truth CSS strategy. All theming (palette variables, font mappings, spacing tokens) lives exclusively in `src/index.css` via the existing `:root` / `.dark` / `@theme inline` structure. New components are additive: one new page directory (`components/home/`) and four home section components, plus replacement experiment card components. The existing API layer, hooks, and TypeScript types require no changes. See `.planning/research/ARCHITECTURE.md` for full component inventory and post-v1.2 file structure.
 
 **Major components:**
-1. Data Ingestion (`data/ingest.py`) — fetches nfl-data-py data, upserts to raw_pbp and raw_schedules; raw data only, no feature computation
-2. Feature Engineering (`features/build.py`) — computes game-level rolling features with strict temporal ordering; writes game_features table; home of the leakage tests
-3. Model Training + Autoresearch Loop (`models/train.py` + `models/program.md`) — XGBoost training, experiment logging to experiments.jsonl + MLflow, agent-driven iteration
-4. Prediction API (`api/main.py`) — FastAPI serving predictions from the deployed model; read-only, model loaded at startup
-5. React Dashboard (`frontend/`) — four views: this week's picks, season record, experiment scoreboard, historical predictions
-6. Weekly Pipeline (`pipeline/refresh.py`) — cron-triggered orchestrator; steps 1-4 automated, model deployment requires human approval
+1. `HomePage.tsx` (new) — landing page, full-width layout outside AppLayout, orchestrates hero/how-it-works/CTAs/footer sections
+2. Bare route outside AppLayout (routing change) — prevents the `md:ml-[180px]` sidebar margin from being applied to the full-width landing page
+3. `ExperimentCard.tsx` + `ExperimentDetailPanel.tsx` (new) — replace the cramped collapsible-in-table pattern with a card grid and inline detail expansion
+4. `index.css` (modified) — single point of change for the entire theme migration: remove Google Fonts import, add Fontsource imports, replace `:root`/`.dark` oklch values with warm amber palette, update `@theme inline` font mappings
+5. `Sidebar.tsx` (modified) — add Home nav item, update `navItems` paths, replace 8 hardcoded color references with semantic tokens
+6. `App.tsx` (modified) — route restructure to place landing page outside AppLayout wrapper
 
 ### Critical Pitfalls
 
-1. **Future data leakage in rolling features** — The project killer. Apply `.shift(1)` to all rolling/expanding computations. Write a leakage test that verifies no feature value for game G uses data from game G or later. Run this test in CI from day one. Detection: suspiciously high accuracy (>65% on NFL games is a red flag).
+Top pitfalls extracted from `.planning/research/PITFALLS.md`:
 
-2. **Overfitting to the 2023 validation season** — The experiment loop with 50+ iterations effectively overfits to 272 games of noise. Cap at 20-30 experiments. Track multi-season accuracy (2021 and 2022) alongside 2023 to detect overfitting. Monitor calibration metrics (Brier score, log loss) not just accuracy.
+1. **Hardcoded color classes bypass the theme system** — 48 utility classes across 16 files (e.g., `bg-zinc-900`, `text-blue-400`, `border-zinc-800`) are not CSS variable-backed and will not respond to palette changes. Define semantic tokens first, migrate all 48 references in a dedicated pass, then swap palette values. Never swap palette first or the dashboard visually splits into two different apps.
 
-3. **nfl-data-py data quality** — Schema changes across seasons cause silent NaN propagation. Team abbreviation changes (OAK -> LV, SD -> LAC, STL -> LA, WSH -> WAS) corrupt rolling calculations. Playoff games contaminate regular-season features. Build a data validation step before feature engineering: check game counts per season, verify column presence across the full date range, normalize team abbreviations universally, filter to regular season only.
+2. **Landing page wrapped inside AppLayout inherits sidebar margin** — AppLayout applies `md:ml-[180px]` to `<main>`. A landing page nested inside it gets a phantom left margin and sidebar chrome. Use two sibling route groups at the top level — one for Home (no layout wrapper), one for dashboard pages inside AppLayout. Never conditionally hide the sidebar inside AppLayout.
 
-4. **Experiment loop degeneration** — Without termination conditions, the loop runs indefinitely or enters regression spirals. Define stop conditions in program.md before starting: "stop after 20 experiments OR 3 consecutive <0.3% improvements OR if accuracy exceeds 58%." Git commit before each experiment so revert is `git checkout -- models/train.py`, not manual undo.
+3. **Route restructure stales the sidebar nav** — The Sidebar `navItems` array currently has `{ to: "/", label: "This Week" }`. When the root path moves to the landing page, this link points to the wrong page and the active-state highlight breaks for all dashboard routes. Update `navItems` immediately alongside the route change.
 
-5. **Ignoring trivial baselines** — "Always pick the home team" achieves ~57% on NFL games. If the ML model cannot beat that, it adds no value. Log trivial baselines (always-home, better-record) from experiment #1 and always display them alongside model accuracy.
+4. **Table-to-card conversion loses comparison capability** — Experiments are comparison data. Replacing the table with pure cards removes the ability to scan across rows to compare accuracy values. Improve the existing table (show full hypothesis text, fix column alignment) and use the card pattern only for the expanded detail view.
+
+5. **Direct oklch values in `@theme inline` break dark mode** — Variables defined with literal color values inside `@theme inline` (not via `var()`) cannot be overridden in `.dark`. Always follow the established indirection: raw variable in `:root` and `.dark`, then `var()` reference in `@theme inline`. Audit for any literal oklch values not wrapped in `var()`.
 
 ## Implications for Roadmap
 
-Based on the combined research, the system must be built in strict dependency order. There is no flexibility in phase sequencing — each phase has hard dependencies on the prior one.
+Based on the combined research, three sequential phases emerge from the dependency analysis. Theme must precede pages; routing restructure can accompany or precede theme work since it is purely structural; landing page and experiments redesign are independent once routing and theme are complete.
 
-### Phase 1: Data Foundation
-**Rationale:** Everything depends on having NFL data in PostgreSQL. No feature engineering, model training, or serving is possible until this works correctly. This is also where the most insidious data quality issues (team abbreviation inconsistencies, schema changes, game count anomalies) must be caught before they corrupt downstream work.
-**Delivers:** Populated raw_pbp and raw_schedules tables for 2005-2024 (~14M play-by-play rows, ~5,700 schedule rows). Data validation checks passing.
-**Addresses:** Table stakes features — data ingestion pipeline, schedule access for rest/bye features.
-**Avoids:** nfl-data-py schema and quality pitfalls (Pitfall 3). Team normalization mapping built here prevents corruption of all downstream rolling stats.
-**Stack:** Python 3.11, nfl-data-py, pandas, pyarrow, PostgreSQL 16, SQLAlchemy 2.0, Alembic, tenacity (retry logic for flaky upstream data).
+### Phase 1: Design System Foundation
+**Rationale:** Every visual component in the dashboard reads from CSS variables. The landing page and experiments redesign both consume the new token layer. Building either page before the theme is defined means using old tokens and reworking later or hardcoding values that should come from variables. This phase must complete before any visual page work begins.
+**Delivers:** Complete warm amber design system token set in `index.css`; self-hosted Syne + IBM Plex Mono fonts replacing Google Fonts CDN; all 48 hardcoded color references migrated to semantic tokens; existing dashboard pages visually aligned with silverreyes.net palette.
+**Addresses:** CSS custom property migration, typography alignment, accent color consistency, border token migration (FEATURES.md table stakes)
+**Avoids:** Pitfall 1 (hardcoded colors resist theme changes), Pitfall 5 (`@theme inline` dark mode incompatibility), Pitfall 6 (font FOUT), Pitfall 11 (Google Fonts render blocking), Pitfall 12 (oklch conversion errors)
+**Research flag:** Standard patterns — shadcn/ui theming, Tailwind v4 `@theme inline`, and Fontsource font loading are thoroughly documented with official sources. No deeper research needed.
 
-### Phase 2: Feature Engineering Pipeline
-**Rationale:** The hardest phase to get right and the easiest to get catastrophically wrong. Feature engineering must be built and validated before any model training — discovering leakage after 30 experiments means rewriting this entire phase and invalidating all experiment results.
-**Delivers:** Populated game_features table (one row per team-game) with leakage tests passing in CI. Includes Tier 1 features: EPA per play, point differential, turnover differential, home/away, rest days, win streak, season win percentage, third-down conversion rate.
-**Addresses:** Must-have ML features (EPA, point differential, turnovers, home/away, rest days). Leakage prevention mechanisms.
-**Avoids:** Future data leakage (Pitfall 1 — the #1 project killer), home/away asymmetry (Pitfall 7), early-season instability (Pitfall 8), target variable construction errors (Pitfall 10).
-**Stack:** PostgreSQL SQL window functions, pandas, temporal config in config.py (single source of truth for train/val/test boundaries).
-**Research flag:** This phase has well-documented patterns for the SQL temporal windowing and pandas shift operations, but the leakage test design is specific to this project's data model. May benefit from brief research into common NFL feature engineering approaches before implementation.
+### Phase 2: Route Restructure and Navigation
+**Rationale:** The routing change is a prerequisite for building the landing page. It is a small, low-risk change (5 lines in `App.tsx`, 3 lines in `Sidebar.tsx`) that can be done immediately after or alongside Phase 1. Completing it before building page content ensures the infrastructure is in place and testable.
+**Delivers:** `/` routes to full-width landing page (no sidebar); dashboard pages move to `/this-week`, `/accuracy`, etc.; Sidebar gains Home nav item; catch-all 404 route added; nginx requires no changes (existing `try_files $uri $uri/ /index.html` already handles all client-side routes).
+**Addresses:** Off-season default routing, Sidebar Home link (FEATURES.md table stakes)
+**Avoids:** Pitfall 2 (route breaks existing bookmarks), Pitfall 3 (sidebar margin on landing page), Pitfall 8 (stale sidebar nav), Pitfall 10 (missing 404 catch-all)
+**Research flag:** Standard patterns — React Router v7 nested routes are well-documented. No deeper research needed.
 
-### Phase 3: Model Training + Autoresearch Infrastructure
-**Rationale:** Requires game_features to exist. This phase establishes the experiment framework before running any experiments — governance rules, logging schema, MLflow setup, and the keep/revert logic must be in place before the loop starts. The 53% benchmark is the primary acceptance criterion.
-**Delivers:** Working autoresearch loop achieving >53% validation accuracy on 2023 season. experiments.jsonl with ≥5 entries. MLflow tracking UI showing run history. Trivial baseline comparisons logged from experiment #1. Temporal split hardcoded (train 2005-2022, val 2023, test 2024 — never touched).
-**Addresses:** Experiment tracking must-haves (per-experiment metrics, feature list, keep/revert log, validation accuracy as primary metric). Autoresearch loop (differentiator).
-**Avoids:** Overfitting to 2023 validation (Pitfall 4 — cap at 20-30 experiments, track multi-season accuracy), experiment loop degeneration (Pitfall 5 — termination conditions in program.md before loop starts), MLflow drift (Pitfall 9 — single log_experiment() function writing to both sinks), ignoring baselines (Pitfall 11).
-**Stack:** XGBoost 2.0+, scikit-learn (preprocessing + calibration), MLflow with xgboost.autolog(), SHAP.
-**Research flag:** The autoresearch loop pattern is novel and not well-documented in standard references. The loop governance structure (program.md schema, termination conditions, deduplication logic) should be designed carefully before implementation.
+### Phase 3: Landing Page
+**Rationale:** Depends on both Phase 1 (design tokens) and Phase 2 (routing infrastructure). Can proceed in parallel with Phase 4 once those foundations are in place. This is the primary external-facing deliverable of v1.2 — the new front door visible to all visitors, solving the off-season empty-state problem permanently.
+**Delivers:** Hero section (headline + live accuracy stat from `useModelInfo` hook with static fallback), how-it-works 3-step explainer, explore CTAs card grid linking to dashboard sections, model credential summary stats, responsive mobile-first layout, tw-animate-css entrance animations.
+**Implements:** `HomePage.tsx`, `HeroSection.tsx`, `HowItWorksSection.tsx`, `ExploreCTAs.tsx`, `HomeFooter.tsx`
+**Avoids:** Pitfall 3 (dual layout — landing page is outside AppLayout), Pitfall 9 (no conditional routing — landing page always shows at `/`; off-season state is a designed empty state on `/this-week`), Pitfall 14 (z-index conflicts — reserve `z-50+` for tooltips and modals, use `z-40` or lower for sticky nav elements)
+**Research flag:** Standard patterns — hero sections, how-it-works layouts, and CTA grids are well-documented UX patterns. No deeper research needed.
 
-### Phase 4: Prediction API
-**Rationale:** Requires a trained model artifact. The API is the integration point between the ML pipeline and the dashboard. Model versioning and the reload endpoint must be designed before building the dashboard against it.
-**Delivers:** FastAPI service at localhost:8000 with five endpoints: /api/predictions/current, /api/predictions/history, /api/model/info, /api/experiments, /api/health. Model loaded at startup in lifespan context. Reload endpoint for post-training model swaps.
-**Addresses:** Dashboard must-haves (this week's picks, historical predictions, experiment scoreboard data).
-**Avoids:** Cold start and stale model issues (Pitfall 6 — lifespan loading, /reload endpoint, model+feature version metadata).
-**Stack:** FastAPI 0.110+, Uvicorn, Pydantic v2, psycopg3.
-**Research flag:** Standard FastAPI patterns are well-documented. Skip research-phase for this component.
-
-### Phase 5: React Dashboard
-**Rationale:** Pure presentation layer with no business logic. Depends entirely on the API being stable. Building this before the API is finalized causes rework when endpoints change.
-**Delivers:** Four dashboard views: This Week's Picks (game cards with predicted winner and confidence), Season Record (accuracy vs. baselines), Experiment Scoreboard (all experiments sorted by val_accuracy, current model highlighted), Historical Predictions (paginated with correct/incorrect badges).
-**Addresses:** All dashboard must-haves and several differentiators (confidence tiers, calibration plot, model performance over time chart, weekly recap highlighting).
-**Avoids:** Confusing accuracy metric presentation (Pitfall 14 — explicit labels: "2023 validation accuracy (272 games): 56.3%").
-**Stack:** React 18, TypeScript strict mode, Vite, TanStack Query (5-min polling), Recharts, Tailwind CSS.
-**Research flag:** Standard React + TypeScript dashboard patterns are well-documented. Skip research-phase.
-
-### Phase 6: Weekly Pipeline + Docker Deployment
-**Rationale:** All components must exist before orchestrating them. Docker Compose wraps the full system. The weekly refresh pipeline closes the loop from new data to updated predictions.
-**Delivers:** docker compose up starts all services. Weekly pipeline runs automatically (cron Tuesday post-games) for steps 1-3 (ingest, features, predict). Model deployment requires human approval. Named volumes persist data across rebuilds.
-**Addresses:** Operational continuity, seasonal data refresh, weekly prediction updates.
-**Avoids:** Docker volume loss (Pitfall 12 — named volumes from day one), weekly refresh race conditions (Pitfall 13 — staging tables or maintenance window), auto-deployment of bad models (Architecture anti-pattern 4 — semi-automated with human approval gate).
-**Stack:** Docker 24+, Docker Compose 2.24+, Nginx 1.25, APScheduler.
-**Research flag:** Docker Compose with ML workloads has a few non-obvious patterns (health checks for service startup ordering, volume configuration for MLflow artifact store). Recommend brief review before implementation.
+### Phase 4: Experiments Page Redesign
+**Rationale:** Independent of Phase 3 once Phases 1 and 2 are complete. The current ExperimentTable has three problems: 60-char hypothesis truncation, cramped multi-column layout, and no visual distinction for the kept experiment. The redesign must preserve comparison capability while improving readability.
+**Delivers:** Full hypothesis text displayed without truncation; improved layout with proper column structure; card-style expanded detail view below the table or inline; left accent border visual distinction for kept vs. reverted experiments; delta from previous best (`prev_best_acc` field already in `ExperimentResponse` type).
+**Implements:** `ExperimentCard.tsx`, `ExperimentCardGrid.tsx`, `ExperimentDetailPanel.tsx` (new); `ExperimentTable.tsx`, `ExperimentDetail.tsx` (removed or retained in hybrid approach)
+**Avoids:** Pitfall 7 (table-to-card loses comparison capability — improve the table, use cards only for detail), Pitfall 13 (fragile collapsible-in-table render prop pattern — style in place, do not refactor during migration)
+**Research flag:** The table vs. card vs. hybrid UI decision must be resolved explicitly before implementation. FEATURES.md describes card-based redesign; PITFALLS.md warns against it for comparison data. This is the highest-ambiguity design decision in the milestone.
 
 ### Phase Ordering Rationale
 
-- **Data before features:** You cannot compute rolling EPA without the play-by-play rows to roll over.
-- **Features before training:** Discovering leakage after the experiment loop has run 20 iterations invalidates all results and requires restarting. The leakage tests must pass before any experiment begins.
-- **Training before API:** The API loads a model artifact. Without a trained model, there is nothing to serve.
-- **API before dashboard:** The dashboard is a consumer of stable API contracts. Building the dashboard against an unfinished API creates constant churn.
-- **All components before deployment:** Docker Compose orchestrates existing services. Dockerizing components as they are built is fine, but the weekly pipeline and deployment validation is last.
-- **Governance before the experiment loop:** Termination conditions, deduplication logic, and the experiments.jsonl schema must be defined before the first experiment runs. These cannot be retrofitted after 30 entries exist.
+- Phase 1 (theme) must be first because every subsequent page uses the new token layer; building pages before the theme creates double-work
+- Phase 2 (routing) can overlap with Phase 1 since it is purely structural TypeScript; it must complete before Phase 3 can be tested end-to-end
+- Phases 3 and 4 are independent workstreams that can proceed in parallel; they share no component dependencies
+- The entire milestone is frontend-only; no backend changes block any phase
 
 ### Research Flags
 
-Phases needing deeper research during planning:
-- **Phase 2 (Feature Engineering):** The no-leakage SQL window function patterns for NFL data and the leakage test design are specific to this domain. Review nfl-data-py column documentation for exact field names before writing queries.
-- **Phase 3 (Autoresearch Loop):** The program.md schema, loop governance rules, and agent handoff mechanics are novel. Design carefully before implementation — a poorly structured loop burns hours on degenerate experiments.
-- **Phase 6 (Docker Deployment):** MLflow artifact store configuration and PostgreSQL health checks in Docker Compose have non-obvious setup requirements.
+Phases needing explicit design decision before implementation:
+- **Phase 4 (Experiments Redesign):** The table vs. card vs. hybrid UI pattern decision must be made before building. Resolve during requirements/roadmap phase by picking one approach and committing to it.
 
-Phases with standard patterns (skip research-phase):
-- **Phase 4 (FastAPI API):** Standard FastAPI patterns, lifespan model loading, and Pydantic v2 are extremely well-documented.
-- **Phase 5 (React Dashboard):** React + TypeScript + TanStack Query + Tailwind is a well-documented, widely-used combination.
+Phases with standard, well-documented patterns (no deeper research needed):
+- **Phase 1 (Design System):** shadcn/ui CSS variable theming, Tailwind v4 `@theme inline`, and Fontsource font loading are all thoroughly documented with official sources at HIGH confidence.
+- **Phase 2 (Routing):** React Router v7 nested routes and layout patterns are standard and well-documented.
+- **Phase 3 (Landing Page):** Hero sections, how-it-works patterns, and CTA grids are established UX patterns.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | MEDIUM-HIGH | Core technology choices are well-established and project-specified. Version numbers (nfl-data-py 0.3.1+, specific psycopg3 version) based on training data; verify on PyPI before pinning. Web search was unavailable during research. |
-| Features | MEDIUM | Feature prioritization and EPA as gold-standard metric are well-established in NFL analytics literature. Specific column availability in nfl-data-py across all seasons (2005-2024) needs verification by loading one season and inspecting the schema before committing to the full feature set. |
-| Architecture | HIGH | Batch ML pipeline with temporal separation is a well-understood pattern. The autoresearch loop design is novel but the core pattern (read-modify-run-evaluate-keep/revert) is sound. Component boundaries and data flows are clearly defined. |
-| Pitfalls | MEDIUM-HIGH | Data leakage patterns, NFL team abbreviation history, and XGBoost serving pitfalls are well-established. nfl-data-py-specific schema quirks and exact column behavior across seasons would benefit from live verification. |
+| Stack | HIGH | All recommendations based on direct `package.json` + `index.css` inspection plus official Tailwind v4, shadcn/ui, and Fontsource docs |
+| Features | MEDIUM-HIGH | Based on codebase analysis + silverreyes.net inspection + UX research patterns; actual silverreyes.net CSS token values could not be fully extracted (design tokens inferred from variable names, not direct CSS read) |
+| Architecture | HIGH | Based on direct inspection of all 40+ source files plus official React Router v7 and Tailwind v4 docs; recommended patterns are the documented intended use |
+| Pitfalls | HIGH | Most pitfalls identified from direct codebase analysis (exact file counts, line numbers, class names verified); validated against official docs and community discussions |
 
-**Overall confidence:** MEDIUM
+**Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **nfl-data-py column schema across seasons:** Before writing feature engineering code, run `nfl.import_pbp_data([2024])` and inspect column names and types. Verify that EPA, WPA, and other advanced metrics exist in 2005 data or determine the earliest season they are available. This affects the training window start date.
-- **Version pinning:** Verify exact latest stable versions of nfl-data-py, psycopg3, and MLflow on PyPI before writing pyproject.toml. Training-data version numbers may be stale.
-- **53% baseline context:** Implement the always-home-team baseline in Phase 3 before any other experiment. If this baseline achieves 57%, the model only adds value if it clearly beats 57%, not 53%. This changes the interpretation of the benchmark.
-- **2024 holdout access control:** Establish a hard policy before starting the experiment loop — no human or agent looks at 2024 holdout performance until the final evaluation. Log it to a separate file that is not surfaced in the dashboard during development.
-- **Autoresearch loop agent interface:** The loop assumes an AI agent will read program.md and modify train.py. The exact interface (how the agent is invoked, how it reads experiment results, how revert is triggered) needs to be specified before Phase 3 implementation begins.
+- **Exact silverreyes.net oklch palette values:** ARCHITECTURE.md notes that the actual OKLCH values could not be fully extracted — only variable names were confirmed. STACK.md provides a reference palette (`--amber-accent: oklch(0.767 0.157 71.7)` / `#f0a020`) based on inspection, but these should be verified against the live site at the start of Phase 1 before committing to the design system values.
+- **Exact font used on silverreyes.net:** ARCHITECTURE.md used Space Grotesk as a placeholder; STACK.md identifies the font as Syne after direct inspection. Confirm Syne is correct at implementation start before installing Fontsource packages.
+- **Experiments table vs. card vs. hybrid decision:** Research gives conflicting guidance — FEATURES.md describes a card-based redesign; PITFALLS.md warns it loses comparison capability. Resolve with an explicit decision in the requirements document before Phase 4 begins.
+- **Theme toggle scope for v1.2:** Deferring the dark/light toggle is recommended, but this should be confirmed in the requirements document since it affects whether light-mode tokens need to be fully specified in Phase 1 (they do not if dark-only is confirmed).
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Project constraints from `.planning/PROJECT.md` — technology choices (Python 3.11, PostgreSQL, XGBoost, FastAPI, React, MLflow, Docker Compose)
-- XGBoost documentation — classification patterns, predict_proba, autolog integration
-- FastAPI documentation — lifespan pattern, Pydantic v2 integration, async/sync model serving
-- MLflow documentation — experiment tracking, XGBoost autolog, artifact store configuration
+- `frontend/src/index.css` (direct file read) — current theme variable structure, 136 lines
+- `frontend/package.json` (direct file read) — current dependency versions
+- All 40+ `frontend/src/` source files (direct inspection) — component inventory, hardcoded color audit, routing structure
+- [shadcn/ui Theming Docs](https://ui.shadcn.com/docs/theming) — CSS variable structure, oklch format
+- [shadcn/ui Tailwind v4 Guide](https://ui.shadcn.com/docs/tailwind-v4) — `@theme inline` pattern, v4-specific integration
+- [Tailwind CSS v4 Theme Variables](https://tailwindcss.com/docs/theme) — `@theme` directive, CSS-first configuration
+- [React Router v7 Routing](https://reactrouter.com/start/framework/routing) — nested routes, layout routes, index routes
+- [tw-animate-css GitHub](https://github.com/Wombosvideo/tw-animate-css) — available animation utilities, composable classes
 
 ### Secondary (MEDIUM confidence)
-- nfl-data-py / nflverse ecosystem training knowledge — import_pbp_data() API, column schema, data update cadence
-- NFL analytics community (nflfastR) — EPA as gold-standard metric, feature prioritization, typical model accuracy ranges
-- scikit-learn documentation — calibration (Platt scaling, isotonic regression), preprocessing pipelines
-- Docker Compose documentation — health checks, named volumes, service dependency ordering
+- silverreyes.net (live site inspection via WebFetch) — design tokens, CSS variable naming, typography; oklch values inferred, not directly extractable
+- [@fontsource/syne](https://www.npmjs.com/package/@fontsource/syne) + [@fontsource/ibm-plex-mono](https://www.npmjs.com/package/@fontsource/ibm-plex-mono) — font weights and self-hosting patterns
+- [web.dev Font Best Practices](https://web.dev/articles/font-best-practices) — self-hosting recommendation for performance
+- [LogRocket Hero Section Best Practices](https://blog.logrocket.com/ux-design/hero-section-examples-best-practices/) — landing page UX patterns
+- [UX Patterns Dev — Table vs Cards](https://uxpatterns.dev/pattern-guide/table-vs-list-vs-cards) — comparison data UI guidance
+- [Enterprise Data Tables](https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-data-tables) — experiment table UX considerations
 
-### Tertiary (LOW confidence — verify before implementing)
-- Specific nfl-data-py column names and availability across seasons 2005-2024 — schema changes between eras need live verification
-- Exact package version numbers for nfl-data-py, psycopg3, APScheduler — based on training data cutoff ~May 2025, verify on PyPI
-- nfl-data-py team abbreviation history — normalization mapping (OAK->LV, SD->LAC, STL->LA, WSH->WAS) should be verified against actual data before use
+### Tertiary (LOW confidence)
+- [Tailwind CSS v4 Theming Discussion](https://github.com/tailwindlabs/tailwindcss/discussions/18471) — community patterns for multi-theme v4 (community thread, not official docs)
 
 ---
-*Research completed: 2026-03-15*
+*Research completed: 2026-03-24*
 *Ready for roadmap: yes*

@@ -1,150 +1,96 @@
 # Domain Pitfalls
 
-**Domain:** NFL game outcome prediction (win/loss classifier with confidence scores)
-**Researched:** 2026-03-15
-**Confidence:** MEDIUM (training-data-based expertise; web verification was unavailable)
+**Domain:** Design system migration and landing page for existing NFL prediction dashboard (React + Tailwind v4 + shadcn/ui)
+**Researched:** 2026-03-24
+**Confidence:** HIGH (findings verified against codebase inspection, official Tailwind v4 docs, shadcn/ui docs, and community discussions)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites, false confidence in model quality, or production failures.
+Mistakes that cause visual regressions across the entire dashboard, break production routing, or require large-scale rework.
 
 ---
 
-### Pitfall 1: Future Data Leakage in Rolling Features
+### Pitfall 1: Hardcoded Tailwind Color Classes Resist Theme Changes
 
-**What goes wrong:** Rolling averages, cumulative stats, or season aggregates are computed using the full season (or the game being predicted) rather than strictly prior games. Example: a "season yards per game" feature for Week 8 that includes Week 8's own yards. The model sees the outcome embedded in the features, inflating validation accuracy to 70%+ -- but real predictions crater to ~50%.
+**What goes wrong:** The current codebase uses 48 hardcoded color utility classes (e.g., `bg-zinc-800`, `text-blue-400`, `border-zinc-800`, `bg-green-500/20`) across 16 files. These are direct Tailwind color palette references, not CSS variable-backed semantic tokens. When the design system palette changes from the current zinc/blue scheme to the silverreyes.net palette, every one of these 48 references must be individually found and updated. Missing even one creates an inconsistent visual -- a zinc-800 sidebar border surrounded by the new palette's surface colors.
 
-**Why it happens:** Pandas `groupby().rolling()` and `expanding()` default to including the current row. A simple `df.groupby('team').expanding().mean()` includes the current game. Many tutorials compute season-level aggregates first, then join, accidentally including future games. The bug is silent -- no errors, just impossibly good metrics.
+**Why it happens:** shadcn/ui components themselves use CSS variable-backed classes (`bg-background`, `text-foreground`, `bg-muted`, `text-muted-foreground`), which re-theme cleanly when you change the `:root` variables. But developer-authored code (Sidebar, PickCard, ExperimentTable, ConfidenceBadge, HistoryTable, etc.) bypassed the variable system and used raw Tailwind colors. This is natural during initial development -- `bg-zinc-800` is concrete and readable -- but it creates a shadow theme that the CSS variable system cannot reach.
 
-**Consequences:** Model appears to beat every benchmark easily during development. Deployed model performs at or below coin flip. Entire feature engineering pipeline must be rewritten. Potentially months of wasted experiment iterations.
+**Consequences:** Partial theme application. The shadcn/ui primitives (Card, Badge, Table) pick up the new palette through CSS variables, but the layout chrome (sidebar, nav, hover states) and semantic colors (success green, error red, warning amber, confidence blue) remain pinned to the old zinc/blue scheme. The dashboard looks like two different apps merged together.
+
+**Specific locations in this codebase:**
+- `Sidebar.tsx`: 8 hardcoded references (bg-zinc-900, border-zinc-800, bg-blue-500/10, text-blue-400, hover:bg-zinc-800)
+- `ExperimentTable.tsx`: 4 references (hover:bg-zinc-800/50, bg-zinc-900/50, bg-green-500/20, bg-red-500/20)
+- `PickCard.tsx`: 4 references (border-blue-500, border-amber-500, border-zinc-500)
+- `ConfidenceBadge.tsx`: 3 references (bg-blue-500/20 text-blue-400, bg-amber-500/20, bg-zinc-500/20)
+- `HistoryTable.tsx`, `SpreadLabel.tsx`, `HistoryLegend.tsx`, `ResultIndicator.tsx`, `SummaryCards.tsx`, `SpreadSummaryCards.tsx`, `ErrorState.tsx`: remaining 29 references
 
 **Prevention:**
-- Shift all rolling/expanding computations by 1: `groupby('team').expanding().mean().shift(1)` -- the `.shift(1)` is mandatory.
-- Write explicit leakage tests: for each game, assert that no feature value could change if that game's outcome changed. Concretely: zero out that game's stats, recompute features, verify identical values.
-- Use a `build_features(games_up_to_date)` function that physically filters the dataframe to exclude future games before computing anything.
-- For opponent-based features (opponent's defensive stats), the same shift rule applies -- you can only use the opponent's stats from games before this matchup.
+1. Create a semantic color layer in CSS variables BEFORE changing any palette values. Define variables like `--color-success`, `--color-danger`, `--color-warning`, `--color-accent`, `--color-surface-elevated`, `--color-surface-sunken`, `--color-nav-active`, `--color-nav-active-bg` in `:root` and `.dark`.
+2. Expose these through `@theme inline` as `--color-success: var(--success)`, etc., so they become Tailwind utilities (`text-success`, `bg-surface-elevated`).
+3. Replace all 48 hardcoded references with the new semantic tokens in a single dedicated pass.
+4. THEN swap the underlying color values to the silverreyes.net palette. Because everything references semantic tokens, the swap is a single-file change to `:root` variables.
+5. Never skip step 3. Changing the palette first and then chasing hardcoded colors leads to a broken intermediate state that is hard to QA.
 
-**Detection:** Suspiciously high accuracy (>65% on NFL games is a red flag). Features that correlate >0.5 with the target. Validation accuracy much higher than any published NFL prediction model.
+**Detection:** After the palette swap, visually inspect every page. Any zinc, blue, green, red, or amber that does not match the new palette is a missed hardcoded reference. A grep for `zinc-|slate-|blue-[0-9]|green-[0-9]|red-[0-9]|amber-[0-9]` in `src/` should return zero hits (outside of the semantic color definition file itself).
 
-**Phase relevance:** Feature Engineering phase. Must be enforced from the very first feature and tested continuously.
+**Phase relevance:** Must be the FIRST step of the design system phase. Do the semantic token migration before any palette changes.
 
 ---
 
-### Pitfall 2: Validation Season Contamination via Feature Leakage
+### Pitfall 2: Landing Page Route Breaks Existing Index Route and Bookmarks
 
-**What goes wrong:** The temporal split (train 2005-2022, validate 2023, test 2024) is correctly applied to the model training step, but features for 2023 games are computed using 2023 data from other games in the validation set. Example: Team A's rolling average going into Week 10 of 2023 uses Weeks 1-9 of 2023 -- those weeks are also in the validation set. This is NOT leakage if done correctly (you would do the same in production). The real pitfall is the reverse: computing 2023 features that accidentally use 2022 training data aggregates that were computed with knowledge of where the train/val boundary falls.
+**What goes wrong:** The current `App.tsx` has `<Route index element={<ThisWeekPage />} />` -- the root path `/` renders This Week. The v1.2 plan adds a landing page at `/`. If this is done by replacing the index route, every existing user bookmark to `nostradamus.silverreyes.net/` now shows a marketing landing page instead of their weekly picks. If This Week moves to `/picks` or `/this-week`, existing bookmarks to the root path break silently (they land on the wrong page, not a 404).
 
-**Why it happens:** Confusion about what "temporal split" means for feature computation vs. model training. Features should be computed sequentially regardless of the split -- the split only governs which rows the model trains on vs. evaluates on.
+**Why it happens:** The root path `/` can only have one handler. React Router's `index` route is unambiguous. Adding a new page to the root requires moving the existing page, which changes the URL contract with users.
 
-**Consequences:** Subtle bias in validation metrics. Over-engineering the split logic wastes time. Under-engineering it leaks.
+**Consequences:** Users who bookmarked the root URL get a landing page instead of picks. The off-season routing logic (mentioned in requirements: "Home instead of empty This Week") adds further complexity -- the root path behavior now depends on whether the NFL season is active. Users during the season want picks at `/`; off-season users should see the landing page. Getting this conditional wrong means the wrong content shows at the wrong time.
 
 **Prevention:**
-- Compute ALL features in one sequential pass over the entire 2005-2024 dataset, using only prior-game data at each step (see Pitfall 1).
-- THEN split into train/val/test by season for model fitting.
-- The features themselves are computed identically to how they would be in production -- using all available prior data.
-- Never compute features separately per split.
+1. Place the landing page at `/` with a NEW layout (no sidebar). Place This Week at `/picks` with the existing `AppLayout` (sidebar).
+2. Use React Router's multiple layout pattern: sibling `<Route>` groups at the top level, one wrapping the landing page in a `LandingLayout`, one wrapping dashboard pages in `AppLayout`.
+3. Add a redirect from `/` to `/picks` during the active season if desired, OR make the landing page always be the entry point with a prominent "View This Week's Picks" CTA.
+4. For backward compatibility, add a `<Route path="this-week" element={<Navigate to="/picks" replace />} />` catch for any old links, though this codebase has not exposed `/this-week` before.
+5. The critical decision: does `/` ALWAYS show the landing page (simpler, predictable) or conditionally route based on season status (complex, requires API call before routing)? Recommendation: always show the landing page at `/`, with a hero CTA that goes to `/picks`. Simpler, no conditional routing bugs.
 
-**Detection:** Check that feature computation code has no awareness of the train/val/test boundary. Features should be a pure function of prior games.
+**Detection:** After the route change, test: direct navigation to `/`, `/picks`, `/accuracy`, `/experiments`, `/history`. Test browser back/forward. Test hard refresh on each route (nginx `try_files` must serve `index.html` for the new `/picks` path -- this already works because the existing nginx config catches all non-file paths).
 
-**Phase relevance:** Feature Engineering and Model Training phases.
+**Phase relevance:** Route restructuring should happen early, before building the landing page content, so the layout infrastructure is in place.
 
 ---
 
-### Pitfall 3: nfl-data-py Data Quality Issues
+### Pitfall 3: Dual Layout Architecture Breaks Sidebar Margin Assumptions
 
-**What goes wrong:** nfl-data-py pulls from nflfastR's public data repository. Several known issues:
-1. **Missing or incomplete games:** Some games (especially older seasons, international games, or games with data feed issues) have incomplete play-by-play. A game might have 40 plays recorded instead of 120+.
-2. **Column schema changes across seasons:** Columns get added, renamed, or deprecated across years. A column present in 2020+ data may be NaN for all pre-2020 games. The `epa` (expected points added) column has different calculation methodologies across eras.
-3. **Bye weeks and schedule gaps:** The data has no explicit bye week rows -- you must infer bye weeks from gaps in the schedule. Rolling features across bye weeks need careful handling (a team's "last 3 games" might span 4 calendar weeks).
-4. **Team abbreviation inconsistencies:** Relocations and rebrandings cause issues. The Raiders appear as OAK (pre-2020) and LV (2020+). Washington appears as WAS, WSH, or WAS with different team names. The Chargers moved from SD to LAC.
-5. **Playoff vs. regular season confusion:** Play-by-play includes postseason games. If you compute rolling stats without filtering, a team's Week 1 features include their playoff performance, which creates a biased feature (only good teams have playoff data).
-6. **The `result` column trap:** nfl-data-py schedule data has a `result` column that contains the home team's score differential. Using this directly as a feature leaks the outcome. It must only be used as the target variable.
+**What goes wrong:** The current `AppLayout.tsx` applies a fixed left margin to `<main>`: `md:ml-[180px] lg:ml-60`. This compensates for the fixed-position sidebar. The landing page needs a full-width layout WITHOUT this margin. If the landing page is accidentally rendered inside `AppLayout`, it will have a 240px left margin with a sidebar it does not need. If the landing page creates its own layout but shares components (like a footer or navigation), CSS from the two layouts can conflict.
 
-**Why it happens:** nfl-data-py is a convenience wrapper, not a curated dataset. The underlying data evolves each season. Schema documentation is sparse.
+**Why it happens:** The entire app currently assumes a single layout. Every page gets the sidebar. Adding a second layout (full-width, no sidebar) to the same router requires restructuring the route tree.
 
-**Consequences:** Silent NaN propagation in features. Models trained on inconsistent features across eras. Team identity bugs that corrupt rolling calculations. Playoff contamination inflates some teams' feature values.
+**Consequences:** Landing page renders with a phantom left margin and a visible sidebar. Or the sidebar disappears from dashboard pages. Or the mobile top nav (which is also in `Sidebar.tsx`) appears on the landing page where it should not.
 
 **Prevention:**
-- Load one season first and inspect ALL columns. Document which columns you use and verify they exist across your entire date range (2005-2024).
-- Build a data validation step that checks: game count per season (should be 256 for 16-game era, 272 for 17-game era starting 2021), minimum play count per game (flag games with <50 plays), team abbreviation mapping table.
-- Create a team name normalization mapping: `{"OAK": "LV", "SD": "LAC", "STL": "LA", "WSH": "WAS"}` and apply it universally.
-- Filter to regular season only for feature computation. Handle playoff features separately if needed.
-- Never use `result`, `home_score`, or `away_score` as features -- only as the target or for computing the target.
+1. Create a `LandingLayout` component that renders `<Outlet />` without any sidebar or margin.
+2. Structure routes as two sibling groups:
+   ```tsx
+   <Routes>
+     <Route element={<LandingLayout />}>
+       <Route index element={<LandingPage />} />
+     </Route>
+     <Route element={<AppLayout />}>
+       <Route path="picks" element={<ThisWeekPage />} />
+       <Route path="accuracy" element={<AccuracyPage />} />
+       <Route path="experiments" element={<ExperimentsPage />} />
+       <Route path="history" element={<HistoryPage />} />
+     </Route>
+   </Routes>
+   ```
+3. The `LandingLayout` should have its OWN navigation (a simple top bar with the brand and a "Dashboard" link), completely separate from the sidebar.
+4. Do NOT try to make `AppLayout` conditionally show/hide the sidebar based on the current route. That creates coupling and is fragile.
 
-**Detection:** Run `df.isna().sum()` on every feature column, grouped by season. Large NaN spikes in certain seasons indicate schema changes. Check `df.groupby('season').game_id.nunique()` to catch missing games.
+**Detection:** Render the landing page and inspect the computed margin-left on the main content area. It should be 0, not 180px or 240px.
 
-**Phase relevance:** Data Ingestion phase. Build validation checks before any feature engineering begins.
-
----
-
-### Pitfall 4: Overfitting to the 2023 Validation Season
-
-**What goes wrong:** The experiment loop iterates many times, each time tweaking hyperparameters or features to maximize 2023 validation accuracy. After 50+ iterations, the model is effectively overfit to the specific outcomes of the 2023 season. It has learned the quirks of that particular season (e.g., the specific upsets, the specific team trajectories) rather than general NFL prediction patterns. The 2024 holdout test reveals the true (much lower) accuracy.
-
-**Why it happens:** This is the fundamental problem with the keep/revert experiment loop. Each iteration that "keeps" a change is implicitly fitting to 2023. With enough iterations, you can reach 60%+ on 2023 while actually degrading generalization. The 2023 season is only ~272 games -- a small validation set where noise dominates.
-
-**Consequences:** False confidence in model quality. The 2024 holdout reveals the model is no better than baseline. All experiment iterations were wasted because they optimized for noise.
-
-**Prevention:**
-- **Cap experiment iterations:** Set a hard limit (20-30 experiments). After that, accept the best model or restructure the approach.
-- **Track multiple validation metrics:** Not just 2023 accuracy. Also track 2021 accuracy and 2022 accuracy (computed on those seasons but not used for keep/revert decisions). If 2023 accuracy improves but 2021/2022 degrade, you are overfitting.
-- **Use calibration, not just accuracy:** Log Brier score, log loss, and calibration plots alongside accuracy. A model with 56% accuracy and well-calibrated probabilities is better than 58% accuracy with garbage confidence scores.
-- **Early stopping on improvement rate:** If the last 5 experiments all showed <0.5% improvement, stop iterating.
-- **Never peek at 2024 holdout until final evaluation.** Not even once. Log it automatically at the end but do not use it for any decision.
-
-**Detection:** Validation accuracy climbing steadily while additional accuracy metrics (on other seasons) plateau or decline. Confidence calibration degrading (model says 80% confident on games it wins only 55% of the time).
-
-**Phase relevance:** Model Training phase (experiment loop). This is the highest-risk phase of the entire project.
-
----
-
-### Pitfall 5: Experiment Loop Infinite Loops and Regression Spirals
-
-**What goes wrong:** The autoresearch-style experiment loop (read program.md, pick experiment, modify train.py, run, log, keep/revert) can degenerate in several ways:
-1. **Infinite loop:** Agent keeps trying similar experiments that all fail to improve, never converging. Each iteration takes 5-10 minutes, burning hours.
-2. **Regression spiral:** A "keep" decision introduces a subtle bug (e.g., accidentally dropping a feature column), subsequent experiments build on the broken base, accuracy degrades, and the agent tries increasingly desperate changes to recover.
-3. **Conflicting reverts:** Agent reverts a change but the experiments.jsonl log still shows the experiment. Later the agent re-tries the same failed experiment.
-4. **train.py drift:** After many iterations, train.py becomes an unmaintainable mess of commented-out code, dead branches, and accumulated hacks.
-
-**Why it happens:** The experiment loop is essentially an optimization algorithm with a human-like agent as the optimizer. Without proper termination conditions, deduplication, and code quality gates, it degrades like any uncontrolled search process.
-
-**Consequences:** Hours of wasted compute. Corrupted model pipeline. Unreproducible results. train.py becomes unreadable.
-
-**Prevention:**
-- **Termination conditions in program.md:** "Stop after 20 experiments OR after 3 consecutive experiments with <0.3% improvement OR if accuracy exceeds 58%."
-- **Experiment deduplication:** Before running, check experiments.jsonl for a semantically similar prior experiment. Skip if already tried.
-- **Git commit before each experiment:** Every iteration starts with a clean commit. Revert means `git checkout -- models/train.py`, not manual undo.
-- **Code quality gate:** After each keep, the code must still pass linting and type checks. No accumulation of dead code.
-- **Structured experiment descriptions:** Each experiment logged with a typed description (e.g., "add feature: opponent_pass_rate_last_5") so deduplication is possible.
-
-**Detection:** Experiments.jsonl growing past 30 entries. Multiple sequential reverts. Accuracy oscillating around the same value for 5+ experiments.
-
-**Phase relevance:** Model Training phase. Define loop governance rules BEFORE starting the loop.
-
----
-
-### Pitfall 6: FastAPI Model Serving Cold Start and Stale Model
-
-**What goes wrong:**
-1. **Cold start latency:** Loading an XGBoost model from disk on first request takes 1-5 seconds. If the model is loaded per-request (a common beginner pattern), every prediction is slow.
-2. **Stale model in memory:** The model is loaded at FastAPI startup and cached in memory. When a new model is trained and approved, the running API still serves the old model. Without a reload mechanism, you must restart the entire service.
-3. **Feature/model version mismatch:** The API serves model v5 but the feature engineering code has been updated for model v6 (new columns, renamed features, different normalization). Predictions silently use wrong feature transformations.
-
-**Why it happens:** FastAPI is a web framework, not a model serving platform. Model lifecycle management is DIY.
-
-**Consequences:** Slow predictions. Serving stale models without knowing. Silent prediction errors from feature mismatches.
-
-**Prevention:**
-- **Load model at startup in a lifespan event**, not per-request. Store in `app.state.model`.
-- **Add a `/reload` endpoint** (POST, protected) that reloads the model from disk. Call this after a successful keep decision.
-- **Version the model and feature pipeline together.** Save a `model_metadata.json` alongside the model artifact that records which feature columns are expected, in what order, and with what preprocessing. The API validates incoming features against this metadata before prediction.
-- **Health check endpoint** that returns the currently loaded model version and last-reload timestamp.
-
-**Detection:** Check response times on the `/predict` endpoint. Monitor which model version the API reports vs. which is latest on disk.
-
-**Phase relevance:** API Serving phase. Design the reload/versioning pattern before building the API.
+**Phase relevance:** Must be resolved when setting up the route structure, before building either the landing page or any navigation changes.
 
 ---
 
@@ -152,77 +98,153 @@ Mistakes that cause rewrites, false confidence in model quality, or production f
 
 ---
 
-### Pitfall 7: Home/Away Feature Asymmetry
+### Pitfall 4: CSS Variable Naming Collision Between Custom Tokens and shadcn/ui
 
-**What goes wrong:** Features are computed from the home team's perspective only. The model learns "home team yards per game" and "away team yards per game" but these are not symmetric transformations of the same underlying team stats. When a team switches from home to away, its features change meaning. Some builders create separate home and away rolling stats, doubling the feature space and halving the data each stat is computed from.
+**What goes wrong:** The current `index.css` defines shadcn/ui's standard CSS variables (`--background`, `--foreground`, `--primary`, `--muted`, etc.) in `:root` and then maps them in `@theme inline` as `--color-background: var(--background)`. Adding custom semantic tokens (e.g., `--success`, `--danger`, `--accent`) risks colliding with shadcn/ui's existing `--accent` variable. The shadcn/ui `--accent` means "interactive element background" while a design system `--accent` might mean "brand highlight color." Overwriting `--accent` changes the look of shadcn/ui's Select, Collapsible, and Badge components in unexpected ways.
+
+**Why it happens:** shadcn/ui occupies a large chunk of the semantic color namespace (`primary`, `secondary`, `accent`, `muted`, `destructive`). Custom design system tokens often want similar names.
+
+**Consequences:** Changing `--accent` to the silverreyes.net brand color makes every shadcn/ui component that uses `bg-accent` (dropdown highlights, collapsible triggers, sidebar items) turn the brand color instead of the intended subtle background. The Badge component's `secondary` variant changes unexpectedly.
 
 **Prevention:**
-- Compute team-level rolling stats independent of home/away status. Then in the game-level feature row, assign them as "team_A_stat" and "team_B_stat" based on home/away.
-- Include a simple `is_home` binary feature to let the model learn home-field advantage.
-- Do not create separate rolling averages for "when home" vs. "when away" -- insufficient sample size per split.
+1. Namespace custom tokens with a prefix: `--brand-accent`, `--brand-success`, `--brand-surface` rather than bare `--accent`, `--success`, `--surface`.
+2. OR map the silverreyes.net palette TO the existing shadcn/ui variable names, understanding exactly what each variable controls:
+   - `--primary` = main action buttons, primary badges
+   - `--secondary` = secondary buttons, subtle backgrounds
+   - `--accent` = interactive element hover/active states in dropdowns, sidebar, collapsible
+   - `--muted` = subdued backgrounds, disabled text
+   - `--destructive` = error/danger states
+3. Option 2 is cleaner if the silverreyes.net palette can naturally map to these semantics. Option 1 is safer if the palette has more colors than shadcn/ui's variable set can express.
+4. Before changing any variable value, list every shadcn/ui component in use (Card, Badge, Table, Skeleton, Select, Collapsible, Separator, Tooltip, Button) and check which variables they reference. The `card.tsx` component uses `bg-card`, `text-card-foreground`, `ring-foreground/10`. The `badge.tsx` uses `bg-primary`, `text-primary-foreground`, `bg-secondary`, `bg-destructive`. Know the blast radius.
 
-**Phase relevance:** Feature Engineering phase.
+**Detection:** After changing CSS variables, render every page and inspect each shadcn/ui component. Pay special attention to hover states, focus rings, and dropdown menus -- these are the hardest to spot because they only appear on interaction.
+
+**Phase relevance:** Design system phase, specifically the CSS variable mapping step.
 
 ---
 
-### Pitfall 8: Early-Season Feature Instability
+### Pitfall 5: @theme inline Variables Not Overridable in Dark Mode
 
-**What goes wrong:** Rolling features for Weeks 1-3 are computed from 0-2 prior games. A team's "yards per game over last 5 games" in Week 2 is based on 1 game -- extremely noisy. The model either gets confused by these unstable values or overfits to early-season noise.
+**What goes wrong:** Variables defined inside `@theme inline` are resolved at build time and do not generate global CSS custom properties that can be overridden. If you define `--color-brand: oklch(0.5 0.2 250)` inside `@theme inline`, you cannot override it in `.dark { --brand: oklch(0.8 0.15 250); }` the same way you can with the shadcn/ui pattern. The existing codebase avoids this problem because it defines raw CSS variables in `:root` and `.dark`, then maps them in `@theme inline`. But if new custom colors are added directly in `@theme inline` without the `:root`/`.dark` pattern, dark mode variants will not work.
+
+**Why it happens:** Tailwind v4's `@theme inline` is designed for values that reference CSS variables, not for defining the variables themselves. The indirection (`@theme inline` -> `var(--some-var)` -> `:root` defines `--some-var`) is what enables dark mode to work. Skipping the indirection breaks the override chain.
+
+**Consequences:** New custom colors work in light mode but are stuck at their light-mode values in dark mode. If the project currently only uses dark mode (the current codebase appears to be dark-only based on the zinc-900 sidebar), this manifests later if light mode is ever added. More immediately, it creates a pattern that future developers will copy, accumulating technical debt.
 
 **Prevention:**
-- Use expanding windows with a minimum period: `expanding(min_periods=3).mean()`. For games with fewer than `min_periods` prior games, fill with the league-wide average for that stat.
-- Include a `games_played_so_far` feature so the model can learn to weight early-season predictions with lower confidence.
-- Consider using prior season's final stats as a "preseason prior" that decays as current-season data accumulates.
+1. Follow the established pattern exactly: define raw variables in BOTH `:root` and `.dark`, then map in `@theme inline`.
+2. For every new color token: `--brand-accent: oklch(...)` in `:root`, different value in `.dark`, then `--color-brand-accent: var(--brand-accent)` in `@theme inline`.
+3. Never put literal color values directly in `@theme inline`. Always reference a `var()`.
 
-**Phase relevance:** Feature Engineering phase.
+**Detection:** Search `@theme inline` for any literal oklch/hsl/rgb values that are not wrapped in `var()`. These are dark-mode-incompatible.
+
+**Phase relevance:** Design system phase. Enforce this pattern from the first new color token.
 
 ---
 
-### Pitfall 9: MLflow Experiment Tracking Drift
+### Pitfall 6: Font Loading Flash (FOUT) When Switching from Google Fonts CDN to Custom Fonts
 
-**What goes wrong:**
-1. **Experiment naming chaos:** Experiments are created ad hoc with names like "test", "test2", "final", "final_v2". After 30 runs, the MLflow UI is unusable.
-2. **Missing parameters:** Some runs log hyperparameters, others do not. Comparison becomes impossible.
-3. **Artifact storage bloat:** Every run saves the full model artifact. With 50+ experiments, disk fills up.
-4. **Dual-logging inconsistency:** experiments.jsonl and MLflow drift apart -- one has runs the other does not, or fields differ.
+**What goes wrong:** The current `index.css` loads Inter and JetBrains Mono from Google Fonts CDN via `@import url('https://fonts.googleapis.com/...')`. This import is render-blocking -- the browser waits for the font before painting text (FOIT in some browsers, FOUT in others). If the silverreyes.net design system uses different fonts and the loading strategy changes (e.g., self-hosting), there is a visible flash of unstyled text on initial load. On slower connections, text appears in the system font for 100-500ms before swapping to the custom font, causing a layout shift as metrics differ.
+
+**Why it happens:** Google Fonts CSS includes `font-display: swap` by default (visible in the `display=swap` URL parameter), which causes FOUT. Self-hosted fonts without explicit `font-display` cause FOIT (invisible text). Either way, the user sees a visual glitch on first load. The problem is worse on subsequent page loads if fonts are not properly cached.
+
+**Consequences:** Cumulative Layout Shift (CLS) penalty when text reflows after font swap. Users see a flash of system font on every cold load. If the new font has significantly different metrics than the fallback, elements jump and resize visibly.
 
 **Prevention:**
-- Define a fixed MLflow experiment name at project start (e.g., "nfl-game-predictor").
-- Create a `log_experiment()` function that writes to BOTH experiments.jsonl AND MLflow atomically. Never log to one without the other.
-- Mandatory parameter schema: every run logs `{features_used, n_estimators, max_depth, learning_rate, train_seasons, val_season, accuracy, brier_score, log_loss, timestamp}`.
-- Only save model artifacts for "keep" decisions, not reverted experiments. Log metrics for all.
-- Use MLflow run tags to mark "kept" vs. "reverted" runs.
+1. Self-host fonts as WOFF2 files in the project's `public/fonts/` directory. This eliminates the external DNS lookup and connection to Google's CDN.
+2. Use `font-display: swap` in `@font-face` declarations for body text (users see text immediately in fallback, then swap).
+3. Use `font-display: optional` for decorative/display fonts used only in the hero (if the font does not load in time, the fallback is used for that page load -- no layout shift).
+4. Add `<link rel="preload" as="font" type="font/woff2" href="/fonts/YourFont.woff2" crossorigin>` in `index.html` for the primary body font. This tells the browser to start downloading the font immediately, before CSS is parsed.
+5. Define a fallback stack with `size-adjust` to match the custom font's metrics: `font-family: 'CustomFont', 'Inter', ui-sans-serif, system-ui, sans-serif`. The `size-adjust` on the fallback `@font-face` can minimize the text reflow.
+6. Subset fonts to include only Latin characters if the dashboard is English-only, reducing file size from ~100KB to ~20KB.
 
-**Phase relevance:** Infrastructure/Setup phase (before model training begins).
+**Detection:** Throttle network to Slow 3G in DevTools and reload. Watch for text appearing in system font before switching. Check CLS score in Lighthouse.
+
+**Phase relevance:** Design system phase, font configuration step. Should be done early since fonts affect all text sizing and layout.
 
 ---
 
-### Pitfall 10: Target Variable Construction Errors
+### Pitfall 7: Experiment Table-to-Card Redesign Loses Comparison Capability
 
-**What goes wrong:** The win/loss target is constructed incorrectly. Common bugs:
-- Ties are silently dropped or assigned to one class, biasing the dataset.
-- The target is computed from the home team's perspective but features are computed from both perspectives, creating 2 rows per game. If both rows predict the same game, the model sees correlated duplicate predictions.
-- Overtime games have different dynamics but are treated identically.
+**What goes wrong:** The current ExperimentTable renders experiments in a sortable table with columns for ID, hypothesis, accuracy across 3 validation years, log loss, and status. Users can sort by accuracy to find the best experiment, scan across rows to compare experiments, and click to expand details. If this is redesigned as a card grid (per the v1.2 "experiments page redesign" goal), the ability to compare experiments side-by-side is lost. Cards are good for browsing individual items but bad for comparing values across items.
+
+**Why it happens:** Cards feel more modern and visually rich. The v1.2 goal mentions "full descriptions, proper column alignment" which suggests the current truncated hypothesis display is inadequate. The natural instinct is to give each experiment more visual space via cards. But experiments are fundamentally comparison data, not browse data.
+
+**Consequences:** Users can no longer quickly answer "which experiment had the highest accuracy?" without mentally holding values from multiple cards. The sort functionality becomes less useful because cards do not align values vertically. Information density drops -- the current table shows 7 columns of data in a single scannable row; a card would need to stack these vertically, showing fewer experiments per viewport.
 
 **Prevention:**
-- Decide on row structure upfront: one row per game (predicting home team win) or two rows per game (each team's perspective, but then you MUST NOT have both rows from the same game in the same train/val split -- they are not independent).
-- One row per game (home team perspective) is simpler and avoids the duplication trap. Recommended for v1.
-- Handle ties explicitly: assign as 0.5, drop them (rare in NFL, ~1 per season), or assign to away team (tie = home team failed). Document the choice.
+1. Keep the table as the primary view for experiments. Tables are the correct UI pattern for comparison data with consistent fields.
+2. Improve the table rather than replacing it: show full hypothesis text (not truncated), add proper column alignment, improve the expanded detail view.
+3. If the redesign adds a card-style detail panel, make it an enhancement to the table (click a row to open a side panel or expanded section) rather than a replacement.
+4. If cards are truly desired, implement a toggle: table view (default) and card view (optional). Default to table because experiment comparison is the primary use case.
+5. The "full descriptions" goal can be achieved within the table by making the hypothesis column wider and allowing text wrap instead of truncation at 60 characters.
 
-**Phase relevance:** Feature Engineering phase (target definition).
+**Detection:** After redesign, ask: "Can a user compare the accuracy of experiments 3 and 5 without scrolling?" If no, the redesign lost information density.
+
+**Phase relevance:** Experiments page redesign phase. The key decision (table vs. cards vs. hybrid) must be made before any implementation.
 
 ---
 
-### Pitfall 11: Ignoring the 53% Baseline Context
+### Pitfall 8: Sidebar Navigation Does Not Update for New Routes
 
-**What goes wrong:** The 53% benchmark sounds easy to beat -- it is not. NFL games are close to 50/50 events with home-field advantage providing ~2-3% edge. Vegas lines, powered by massive data operations, achieve roughly 53% against the spread and ~65% on moneyline favorites. A simple "always pick the home team" model gets ~57%. A "pick the team with the better record" heuristic gets ~60%. If your ML model cannot beat these trivial baselines, it is not learning anything useful.
+**What goes wrong:** The Sidebar component has a hardcoded `navItems` array with four entries: This Week (`/`), Accuracy (`/accuracy`), Experiments (`/experiments`), History (`/history`). When the landing page moves This Week to `/picks`, the sidebar nav link must update from `/` to `/picks`. If forgotten, the sidebar "This Week" link points to the landing page. Additionally, the `end={item.to === "/"}` prop on NavLink (which prevents the root path from matching all routes) must be reconsidered since `/` is no longer a dashboard route.
+
+**Why it happens:** Navigation is often the last thing updated because developers focus on the page content and routing logic. The hardcoded nav array is easy to overlook.
+
+**Consequences:** Clicking "This Week" in the sidebar navigates to the landing page (which has a different layout). The active state highlighting breaks -- if the user is on `/picks`, no sidebar item is highlighted because none matches that path. The mobile top nav has the same issue (it uses the same `navItems` array).
 
 **Prevention:**
-- Implement and log trivial baselines alongside every experiment: always-home, better-record, higher-ELO.
-- The 53% target should be a minimum threshold, not a goal. Compare against the trivial baselines to prove the model adds value beyond simple heuristics.
-- If the model achieves 56% but always-pick-home achieves 57%, the model is worse than useless despite "beating" 53%.
+1. Update `navItems` in `Sidebar.tsx` immediately when routes change. Change `{ to: "/", icon: Calendar, label: "This Week" }` to `{ to: "/picks", ... }` (or whatever the new path is).
+2. Remove the `end={item.to === "/"}` special case since no nav item points to `/` anymore.
+3. Consider whether the sidebar should have a "Home" link to the landing page, or if the brand name in the sidebar header should link to `/`.
+4. Test the mobile top nav (lines 85-107 of `Sidebar.tsx`) separately -- it renders the same `navItems` but has different layout constraints.
 
-**Phase relevance:** Model Training phase. Baselines must be established in the first experiment.
+**Detection:** After route changes, click every sidebar link on both desktop and mobile viewports. Verify the active state (blue highlight) appears on the correct item for each page.
+
+**Phase relevance:** Route restructuring phase, immediately after defining the new route structure.
+
+---
+
+### Pitfall 9: Off-Season Default Routing Creates an Empty State Trap
+
+**What goes wrong:** The v1.2 requirements mention "off-season-aware default routing (Home instead of empty This Week)." During the NFL off-season (roughly February through September), This Week has no predictions to show -- it displays an empty or error state. The plan is to route to the landing page instead. But this conditional routing is complex: it requires knowing whether the current date falls within the NFL season, which means either hardcoding season dates (fragile -- the NFL schedule varies) or checking the API for current predictions (adds a loading state and potential error to the routing decision).
+
+**Why it happens:** The NFL off-season is 7+ months. The current dashboard shows an empty This Week page for most of the year, which is a poor first impression. The desire to fix this is correct, but the implementation is tricky.
+
+**Consequences:** If the routing check fails (API error, slow response), the user sees a loading spinner before being routed anywhere. If season dates are hardcoded, they must be updated annually. If the logic has a bug, users during the season get sent to the landing page instead of picks, or off-season users are stuck on an empty picks page.
+
+**Prevention:**
+1. Simplest approach: always make `/` the landing page, never conditionally route. The landing page has a CTA button "View This Week's Picks" that goes to `/picks`. During the off-season, `/picks` shows a friendly "The NFL season starts in September. Check back then!" message with links to History and Experiments.
+2. If conditional routing is truly wanted, implement it client-side in the LandingPage component: fetch current predictions, if data exists show a banner "This week's picks are live! [View Picks]", if not show the standard landing page content. This avoids routing-level complexity.
+3. Do NOT make the router itself depend on an API call. The route structure should be static and predictable.
+4. The off-season empty state on `/picks` should be a designed component, not a loading error or blank page. It should show the most recent completed season's stats and a link to History.
+
+**Detection:** Test the full flow during off-season: navigate to `/`, click to `/picks`, see the off-season state. Test during the season: navigate to `/`, click to `/picks`, see live predictions. Both should feel intentional.
+
+**Phase relevance:** Landing page phase. The routing strategy must be decided before building the landing page content.
+
+---
+
+### Pitfall 10: Production nginx Config Needs No Changes But Catch-All Route Needs One
+
+**What goes wrong:** The existing nginx config (`docker/nginx.conf`) has `try_files $uri $uri/ /index.html` which correctly serves `index.html` for all non-file client-side routes. This means adding `/picks` to React Router will work without any nginx changes -- nginx serves `index.html`, React Router handles the path. However, the app currently has NO catch-all route for 404s. If a user navigates to `/nonexistent`, React Router renders nothing (blank page within the layout). With the new landing page at `/`, this becomes more visible because users might type partial URLs.
+
+**Why it happens:** The existing route structure was simple enough that invalid paths were unlikely. With more routes and a public-facing landing page, the surface area for invalid URLs increases.
+
+**Consequences:** Users hitting typo URLs see a blank content area with a sidebar. No feedback that the page does not exist. Search engines crawling broken links index blank pages.
+
+**Prevention:**
+1. Add a catch-all route at the end of the route configuration:
+   ```tsx
+   <Route path="*" element={<NotFoundPage />} />
+   ```
+2. Place it inside the `AppLayout` wrapper so it has the sidebar context (or in `LandingLayout` depending on desired 404 appearance).
+3. The `NotFoundPage` should link to `/` (landing page) and `/picks` (dashboard).
+4. No nginx changes needed -- the existing `try_files` correctly serves index.html for all paths.
+
+**Detection:** Navigate to `/asdfgh` and verify a proper 404 page appears instead of blank content.
+
+**Phase relevance:** Route restructuring phase. Add alongside the route changes.
 
 ---
 
@@ -230,43 +252,56 @@ Mistakes that cause rewrites, false confidence in model quality, or production f
 
 ---
 
-### Pitfall 12: Docker Compose Configuration for ML Workloads
+### Pitfall 11: Google Fonts @import Blocks CSS Parsing
 
-**What goes wrong:** PostgreSQL, FastAPI, MLflow, and potentially a training container all in Docker Compose. Common issues: PostgreSQL data not persisted (forgot volume mount), MLflow artifacts stored inside the container (lost on rebuild), training container runs out of memory because no limits set, network configuration prevents FastAPI from reaching PostgreSQL.
+**What goes wrong:** The current `index.css` starts with `@import url('https://fonts.googleapis.com/...')`. CSS `@import` of an external URL is render-blocking: the browser must fetch the external stylesheet before it can continue parsing the rest of the CSS file. This adds 50-200ms to first paint on every cold load. If the Google Fonts CDN is slow or unreachable, the entire page rendering stalls.
 
 **Prevention:**
-- Named volumes for PostgreSQL data AND MLflow artifact store from day one.
-- Set memory limits for the training container.
-- Use Docker Compose health checks so the API does not start before PostgreSQL is ready.
-- Use a `.env` file for database credentials -- never hardcode in docker-compose.yml.
+1. When migrating to the new font, move the font loading to `<link>` tags in `index.html` (with `rel="preload"`) instead of CSS `@import`.
+2. Better: self-host the fonts as WOFF2 and use `@font-face` declarations directly in CSS, eliminating the external dependency entirely.
+3. If keeping Google Fonts temporarily, at minimum move from `@import` to a `<link>` tag in `index.html`, which can be loaded in parallel with other resources.
 
-**Phase relevance:** Deployment phase.
+**Phase relevance:** Design system phase, font migration step.
 
 ---
 
-### Pitfall 13: Weekly Data Refresh Race Condition
+### Pitfall 12: oklch Browser Compatibility for Custom Palette Values
 
-**What goes wrong:** The weekly pipeline (fetch new data, compute features, optionally retrain) runs while the API is serving predictions. If the pipeline updates the database mid-computation, the API might serve predictions based on partially-updated features.
+**What goes wrong:** The existing shadcn/ui variables already use oklch (e.g., `--background: oklch(0.145 0 0)`), so the codebase is committed to oklch. The silverreyes.net palette colors must be converted to oklch values to match. If the designer provides colors in hex/HSL/RGB, the conversion to oklch must preserve the intended appearance. oklch values are not intuitive -- `oklch(0.7 0.15 250)` does not map obviously to a recognizable color. Conversion errors produce unexpected hues.
 
 **Prevention:**
-- Use a staging table pattern: load new data into staging tables, compute features there, then atomically swap.
-- Or simpler: schedule the refresh during low-traffic hours and briefly take the API offline (acceptable for a personal/portfolio project).
-- Never retrain and serve from the same model file simultaneously.
+1. Use the oklch color picker (oklch.com) or Tailwind's built-in color tools to convert brand colors accurately.
+2. Verify converted colors visually in the browser, not just numerically.
+3. oklch's Lightness (L) channel must stay above 0.1 for dark backgrounds and below 0.95 for light text to maintain WCAG contrast ratios.
+4. Test contrast ratios explicitly: `--foreground` against `--background`, `--primary-foreground` against `--primary`. Use a contrast checker that supports oklch.
 
-**Phase relevance:** Pipeline/Deployment phase.
+**Phase relevance:** Design system phase, palette definition step.
 
 ---
 
-### Pitfall 14: Confusing Accuracy Metrics Across Different Contexts
+### Pitfall 13: Collapsible Table Row Rendering Breakage After Style Changes
 
-**What goes wrong:** Reporting "62% accuracy" without specifying whether that is training accuracy, validation accuracy, test accuracy, accuracy on favorites only, accuracy on close games, or accuracy on a specific week range. Stakeholders (or your future self) cannot interpret the number.
+**What goes wrong:** The ExperimentTable uses shadcn/ui's `Collapsible` component with a `render` prop to inject `<TableRow>` elements: `<CollapsibleTrigger render={<TableRow className="hover:bg-zinc-800/50 cursor-pointer transition-colors" />}>`. This is a non-standard usage pattern where the Collapsible wraps table rows. Changing the table's styling (background colors, hover states, border patterns) can break the visual continuity between the trigger row and the expanded content row. Additionally, this pattern uses `@base-ui/react` primitives (not Radix) -- the render prop API is specific to base-ui and behaves differently from Radix's `asChild`.
 
 **Prevention:**
-- Always log metrics with explicit context: `{"metric": "accuracy", "split": "val_2023", "value": 0.563, "n_games": 272}`.
-- Dashboard should show validation accuracy prominently and training accuracy with a clear "this is training accuracy, expect it to be higher" note.
-- Break down accuracy by: overall, home favorites, away favorites, close-spread games, divisional games.
+1. When updating the experiment table styles, test the expand/collapse interaction specifically. The expanded row (`bg-zinc-900/50`) must visually connect to its parent row.
+2. Update both the trigger row and content row backgrounds together -- they are separate elements that need coordinated styling.
+3. Do not attempt to refactor the Collapsible-in-Table pattern during the style migration. It works and is fragile. Style it in place.
 
-**Phase relevance:** Model Training and Dashboard phases.
+**Phase relevance:** Experiments page redesign phase.
+
+---
+
+### Pitfall 14: Tooltip Portal Z-Index Conflicts with New Landing Page Elements
+
+**What goes wrong:** The current tooltip implementation uses `TooltipPrimitive.Portal` to render tooltips in a portal (outside the component tree in the DOM). Portaled elements rely on z-index stacking. The landing page will introduce new full-width sections, potentially with sticky headers or hero overlays. If these have z-index values that compete with the tooltip's `z-50`, tooltips on the dashboard pages can render behind landing page elements during transitions, or the landing page's own interactive elements can conflict.
+
+**Prevention:**
+1. The landing page and dashboard are on different routes and will not render simultaneously, so this is mainly a risk during route transitions or if shared components (like a global header) use z-index.
+2. If adding a sticky navigation to the landing page, use `z-40` or lower. Reserve `z-50` for tooltips and modals.
+3. Audit all z-index values before adding new ones. The current codebase uses `z-50` for the mobile nav and tooltips.
+
+**Phase relevance:** Landing page phase, specifically any sticky/fixed-position elements.
 
 ---
 
@@ -274,22 +309,27 @@ Mistakes that cause rewrites, false confidence in model quality, or production f
 
 | Phase Topic | Likely Pitfall | Mitigation |
 |-------------|---------------|------------|
-| Data Ingestion | nfl-data-py schema changes silently break feature code across seasons (Pitfall 3) | Validate schema per-season, build normalization mapping, check game counts |
-| Feature Engineering | Future data leakage in rolling features (Pitfall 1) -- the #1 project killer | Mandatory `.shift(1)` on all rolling/expanding ops, write leakage unit tests |
-| Feature Engineering | Home/away asymmetry and early-season instability (Pitfalls 7, 8) | Team-level stats independent of venue, minimum periods with league-average fill |
-| Feature Engineering | Target variable construction errors (Pitfall 10) | One row per game (home perspective), explicit tie handling |
-| Model Training | Overfitting to 2023 validation season (Pitfall 4) | Cap iterations, track multi-season accuracy, monitor calibration |
-| Model Training | Experiment loop degeneration (Pitfall 5) | Termination conditions in program.md, git commit per iteration, deduplication |
-| Model Training | Ignoring trivial baselines (Pitfall 11) | Always-home and better-record baselines logged from experiment #1 |
-| Experiment Tracking | MLflow/jsonl dual-logging drift (Pitfall 9) | Single `log_experiment()` function, mandatory parameter schema |
-| API Serving | Cold start, stale model, feature/model version mismatch (Pitfall 6) | Lifespan model loading, `/reload` endpoint, version metadata |
-| Deployment | Docker volume persistence, refresh race conditions (Pitfalls 12, 13) | Named volumes, staging tables or maintenance windows |
-| Dashboard | Confusing accuracy contexts (Pitfall 14) | Explicit metric labeling with split, sample size, and breakdown |
+| Design System: Palette Migration | Hardcoded color classes (48 across 16 files) not affected by CSS variable changes (Pitfall 1) | Create semantic tokens first, migrate hardcoded refs, then swap palette values |
+| Design System: CSS Variables | Custom token names colliding with shadcn/ui's --accent, --primary, etc. (Pitfall 4) | Either namespace custom tokens (--brand-*) or deliberately map palette to shadcn/ui semantics |
+| Design System: @theme inline | New colors defined directly in @theme inline cannot be overridden for dark mode (Pitfall 5) | Always use the :root -> var() -> @theme inline indirection pattern |
+| Design System: Fonts | FOUT/FOIT from external font loading; @import blocks CSS parsing (Pitfalls 6, 11) | Self-host WOFF2, preload in index.html, use font-display: swap |
+| Design System: oklch Colors | Hex-to-oklch conversion errors produce wrong hues, contrast violations (Pitfall 12) | Visual verification, contrast ratio checks |
+| Route Restructuring | Root path change breaks existing bookmarks, sidebar nav stale (Pitfalls 2, 8) | Update Sidebar navItems, add redirects, test all bookmark paths |
+| Route Restructuring | No catch-all 404 route (Pitfall 10) | Add path="*" route with NotFoundPage |
+| Landing Page: Layout | Landing page inherits sidebar margin from AppLayout (Pitfall 3) | Use separate LandingLayout, sibling route groups |
+| Landing Page: Off-Season | Conditional routing based on season status is complex and fragile (Pitfall 9) | Static routes, handle off-season as designed empty state on /picks |
+| Landing Page: Z-Index | Sticky/fixed elements conflict with tooltip portals (Pitfall 14) | Reserve z-50+ for overlays; audit z-index before adding |
+| Experiments Redesign | Table-to-card conversion loses comparison capability (Pitfall 7) | Improve the table, don't replace it; cards for detail, table for comparison |
+| Experiments Redesign | Collapsible-in-table render prop pattern is fragile (Pitfall 13) | Style in place, don't refactor the pattern during migration |
 
 ---
 
 ## Sources
 
-- Training-data-based domain knowledge on sports ML prediction, nfl-data-py, XGBoost, MLflow, FastAPI. MEDIUM confidence overall.
-- Web verification was unavailable during this research session. Findings should be validated against current nfl-data-py documentation and recent community discussions.
-- Specific nfl-data-py column and team abbreviation details based on training data from nflfastR/nfl-data-py ecosystem as of mid-2024. Schema may have changed -- verify against `nfl.import_pbp_data([2024])` column listing.
+- **Codebase inspection:** Direct analysis of `index.css`, `App.tsx`, `Sidebar.tsx`, `AppLayout.tsx`, `PickCard.tsx`, `ExperimentTable.tsx`, `card.tsx`, `badge.tsx`, `tooltip.tsx`, `nginx.conf`, `docker-compose.yml`, `package.json`, `vite.config.ts` and all 16 files with hardcoded color references. HIGH confidence.
+- **Tailwind v4 theming:** [Theme variables docs](https://tailwindcss.com/docs/theme), [@theme vs @theme inline discussion](https://github.com/tailwindlabs/tailwindcss/discussions/18560), [Theming best practices in v4](https://github.com/tailwindlabs/tailwindcss/discussions/18471). HIGH confidence.
+- **shadcn/ui theming:** [Theming docs](https://ui.shadcn.com/docs/theming), [Tailwind v4 migration](https://ui.shadcn.com/docs/tailwind-v4), [Customizing themes without breaking updates](https://medium.com/@sureshdotariya/customizing-shadcn-ui-themes-without-breaking-updates-a3140726ca1e). HIGH confidence.
+- **Font loading:** [Ultimate guide to font loading optimization](https://onenine.com/ultimate-guide-to-font-loading-optimization/), [Self-host Google Fonts for better Core Web Vitals](https://www.corewebvitals.io/pagespeed/self-host-google-fonts), [Web font optimization guide](https://font-converters.com/guides/web-font-optimization). MEDIUM confidence (general best practices, not project-specific).
+- **Table vs. card UX:** [Table vs List View vs Card Grid](https://uxpatterns.dev/pattern-guide/table-vs-list-vs-cards), [Cards versus Table UX Patterns](https://cwcorbin.medium.com/redux-cards-versus-table-ux-patterns-1911e3ca4b16), [Enterprise data tables](https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-data-tables). MEDIUM confidence.
+- **React Router v7:** [Upgrading from v6](https://reactrouter.com/upgrading/v6), [React Router SPA docs](https://reactrouter.com/how-to/spa). HIGH confidence.
+- **nginx SPA routing:** [How to fix 404 errors with React Router and Nginx](https://www.frontendundefined.com/posts/tutorials/nginx-react-router-404/), [Configure React Router with Nginx](https://oneuptime.com/blog/post/2025-12-16-nginx-react-router-configuration/view). HIGH confidence.

@@ -1,231 +1,186 @@
 # Feature Landscape
 
-**Domain:** NFL Game Outcome Prediction System
-**Researched:** 2026-03-15
-**Confidence:** MEDIUM (based on training knowledge of NFL analytics ecosystem, nfl-data-py, and ML experiment patterns; no live web verification available)
+**Domain:** Design system migration, landing page, and experiment scoreboard redesign for NFL prediction dashboard
+**Researched:** 2026-03-24
+**Milestone:** v1.2 Design & Landing Page
+**Confidence:** MEDIUM-HIGH (based on analysis of existing codebase, silverreyes.net design system, UX research patterns, and web search verification)
+
+---
 
 ## Table Stakes
 
-Features users expect. Missing = product feels incomplete.
+Features users expect for a design refresh milestone. Missing = the redesign feels half-done.
 
-### ML Engineered Features (Game-Level from Play-by-Play)
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Rolling offensive yards per game (pass + rush) | Most basic team strength signal; every public model uses this | Low | Use 3-game and season-to-date windows. Must use only prior games (no leakage). |
-| Rolling points scored / allowed per game | Direct outcome proxy; foundational feature | Low | Same rolling window treatment. Differential (scored - allowed) is often more predictive than raw values. |
-| Turnover differential (rolling) | Turnovers are among the strongest single-game predictors | Low | INTs + fumbles lost vs forced. Rolling average smooths variance. |
-| Third-down conversion rate (off + def) | Proxy for sustained drive ability and defensive stops | Low | Available directly in play-by-play aggregation. |
-| Home/away indicator | Home-field advantage is ~2.5 points historically | Low | Binary feature. One of the most reliably predictive simple features. |
-| Rest days / bye week indicator | Short rest (Thursday games) degrades performance measurably | Low | Compute days since last game from schedule data. |
-| Win/loss streak (current) | Captures momentum, team form | Low | Count consecutive wins/losses entering the game. |
-| Season win percentage to date | Overall team quality measure | Low | Wins / games played, computed only from prior games. |
-| EPA per play (offensive and defensive, rolling) | Expected Points Added is the gold standard advanced metric in nfl-data-py | Medium | nfl-data-py provides per-play EPA. Aggregate to game-level, then roll. This is THE feature that separates toy models from real ones. |
-| Pass rate over expected (PROE) | Captures offensive play-calling tendency adjusted for situation | Medium | Derived from play-by-play pass/rush decisions vs expected. Requires situation-aware baseline. |
-| Opponent-adjusted metrics | Raw stats mislead when schedule strength varies | High | Adjust rolling EPA/yards by opponent defensive rank. Requires computing opponent quality first. |
-
-### Prediction Output Features
+### Landing Page
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Binary win/loss prediction per game | The core output -- "who wins?" | Low | Direct classifier output. |
-| Confidence score (predicted probability) | Users need to know HOW confident the model is, not just the pick | Low | XGBoost predict_proba output. Display as percentage. |
-| Historical accuracy tracking | Users cannot trust a model without seeing its track record | Medium | Store all past predictions vs actual outcomes. Show season-level and rolling accuracy. |
-| Model accuracy vs naive baseline | "57% accurate" means nothing without "coin flip is 50%, home team always wins is 57%" | Low | Always display model accuracy alongside at least one baseline. |
+| Hero section with headline + stat | Visitors decide in <5 seconds whether to stay; the hero must answer "what does this do?" instantly | Low | Headline: "Nostradamus" or project name. Sub-headline: one-sentence value prop. Hero stat: "63.7% accuracy" as the proof point. No image needed -- the stat IS the visual. |
+| How-it-works explainer (3 steps) | Non-technical visitors need to understand the ML pipeline without jargon; this is the standard pattern for technical product landing pages | Medium | Three steps: (1) Ingest 20 seasons of data, (2) Train models on team stats, (3) Predict next week's winners. Use icons, short labels, and 1-2 sentence descriptions. Avoid words like "XGBoost" or "feature engineering" -- say "pattern recognition" and "team performance signals." |
+| Explore CTAs linking to dashboard views | A landing page without navigation into the product is a dead end; visitors need clear paths to the actual predictions | Low | 2-4 cards linking to This Week, Accuracy, Experiments, History. Use descriptive labels: "See This Week's Picks," "Track Season Accuracy," etc. |
+| Model credential summary | Users evaluate trust through numbers; showing key metrics (accuracy, games predicted, seasons of data) builds credibility without requiring users to dig | Low | 3-4 stat cards: accuracy percentage, total games predicted, seasons of historical data, models compared. These are static or API-fed numbers. |
+| Responsive layout (mobile-first) | silverreyes.net is responsive; a subdomain that breaks on mobile undermines the parent brand | Low | Single-column stack on mobile, multi-column grid on desktop. Hero headline + stat must be visible without scrolling on any device. |
 
-### Dashboard Features
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| This week's picks with confidence | The primary user-facing view -- "what does the model say this week?" | Medium | Requires weekly data refresh pipeline feeding the UI. |
-| Confidence-sorted game list | Users want to see highest-confidence picks first | Low | Simple sort on prediction probability. |
-| Season accuracy summary | "How is the model doing this year?" | Low | Win/loss on predictions, displayed as percentage with record (e.g., 142-98). |
-| Historical predictions log | Scrollable/filterable list of all past predictions and outcomes | Medium | Paginated table with filters by week, team, correctness. |
-
-### Experiment Tracking Features
+### Design System Alignment
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Per-experiment metrics logging (accuracy, log loss, AUC) | Cannot iterate without tracking what was tried and how it performed | Low | Log to experiments.jsonl per the project spec. |
-| Experiment comparison (side-by-side) | Need to compare runs to decide keep/revert | Medium | MLflow UI handles this natively. experiments.jsonl needs a viewer or script. |
-| Feature list per experiment | Must know which features each run used to understand what drove improvement | Low | Log feature names alongside metrics. |
-| Keep/revert decision log | Audit trail of which models were promoted and why | Low | Boolean field in experiments.jsonl plus optional notes. |
-| Validation accuracy as primary metric | The project lives or dies on 2023 val accuracy -- it must be front and center | Low | Always display prominently; never let training accuracy confuse the picture. |
+| CSS custom property migration to silverreyes.net tokens | The dashboard currently uses shadcn/ui's default oklch color tokens; silverreyes.net uses semantic tokens (`--color-text`, `--color-accent`, `--color-surface`, `--color-border`). Mismatched palettes make the subdomain feel disconnected. | Medium | Map shadcn's `--foreground`, `--muted-foreground`, `--card`, `--border` to silverreyes.net equivalents. The `@theme inline` block in `index.css` is the single point of change. |
+| Typography alignment (display + mono fonts) | silverreyes.net uses `--font-display` for headings and `--font-mono` for metadata/labels. Dashboard currently uses Inter + JetBrains Mono. Must either adopt the parent fonts or ensure the pairing feels cohesive. | Low | If silverreyes.net's `--font-display` is a different family, import it. JetBrains Mono already serves the `--font-mono` role well. Key: headings should match the parent site's typographic voice. |
+| Dark mode as default with light toggle support | silverreyes.net defaults to dark with localStorage-persisted `data-theme` toggle. The dashboard is currently dark-only (hardcoded `.dark` class). Must at minimum keep dark as primary; light mode toggle is a bonus. | Low-Med | The `.dark` class in `index.css` already defines dark tokens. Adding `data-theme="light"` support requires defining the light variant tokens to match silverreyes.net. Can ship dark-only initially and add toggle later. |
+| Accent color consistency | silverreyes.net uses `--color-accent` for hover states, links, and interactive highlights. The dashboard currently uses hardcoded `blue-400`/`blue-500` classes throughout (Sidebar active state, ConfidenceBadge, SHAP bars). | Medium | Replace all hardcoded blue Tailwind classes with a semantic `--color-accent` token. This is scattered across ~8 components (Sidebar, PickCard, ExperimentDetail, SummaryCards, SpreadLabel, etc.). |
+| Spacing and border patterns | silverreyes.net uses `--space-xs/sm/md/lg` tokens and consistent border styling. The dashboard uses mixed Tailwind spacing (`p-3`, `p-4`, `p-6`, `p-8`) and hardcoded border colors (`border-zinc-800`). | Low | Define spacing tokens in `@theme inline`. Replace hardcoded `zinc-800` border colors with `var(--color-border)`. This is mostly a find-and-replace operation. |
+| Card component visual alignment | silverreyes.net project cards use left accent bars with hover animation (height 0 -> full). Dashboard cards use shadcn Card with left border-l-3px for confidence tier. The patterns are compatible but need palette alignment. | Low | Keep shadcn Card wrapper. Update tier border colors from hardcoded `blue-500`/`amber-500`/`zinc-500` to design-system-aware equivalents. The left-accent pattern already exists in both systems. |
+
+### Off-Season Default Routing
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Route to landing page (Home) instead of empty This Week | Currently, the index route (`/`) maps to ThisWeekPage, which shows a generic "Offseason" ErrorState during the 6+ months with no games. This is the first thing any visitor sees. A blank error page as the front door is unacceptable. | Low | Change the route structure: `/` -> new LandingPage, `/this-week` -> ThisWeekPage. Update Sidebar navItems. The landing page always has content regardless of season state. |
+| Sidebar "Home" link | With a landing page at `/`, the sidebar needs a Home entry. Currently missing because ThisWeekPage was the de facto home. | Low | Add Home icon (e.g., `Home` from lucide-react) to navItems array. Straightforward 3-line change in Sidebar.tsx. |
+
+### Experiments Page Redesign
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Full hypothesis text (not truncated) | The current table truncates hypotheses at 60 chars with "..." -- the hypothesis IS the experiment's purpose and users need to read it to understand what was tested | Low | Remove the `.slice(0, 60)` truncation. Display full text in the table row or in the expanded detail. |
+| Proper column alignment | Current table has 7 columns crammed into a responsive layout with fixed widths (`w-12`, `w-[100px]`, `w-20`). On narrow viewports, columns overflow or compress awkwardly. | Medium | Switch from a dense multi-column table to a card-based or two-column layout. Each experiment gets a row/card with the hypothesis prominently displayed and metrics in a structured grid below. |
+| Expanded detail with parameters, features, SHAP | The current `ExperimentDetail` component already exists and shows hypothesis, params, features, and SHAP top-5 bars. But the expand/collapse via `Collapsible` inside a `<Table>` is fragile (table row semantics + collapsible conflict). | Medium | Keep the existing data display (it works). Rethink the container: use a card with collapsible section instead of table rows with collapsible. Preserves all existing ExperimentDetail content. |
+| Visual distinction between kept and reverted experiments | Current Badge with green/red is good but small. Users scanning the list need to instantly see which experiments were promoted vs discarded. | Low | Add a left accent border (green for kept, muted for reverted) matching the card pattern from silverreyes.net. Badge remains but the visual weight increases. |
+
+---
 
 ## Differentiators
 
-Features that set product apart. Not expected, but valued.
+Features that set the redesign apart. Not expected, but valued.
 
-### ML Engineered Features (Advanced)
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| CPOE (Completion Percentage Over Expected) | Isolates QB accuracy from scheme/situation; available in nfl-data-py | Medium | Strong signal for passing game quality beyond raw completion %. |
-| Success rate (% of plays with positive EPA) | Captures consistency better than averages; a team with steady positive plays is more reliable than one with boom/bust | Medium | Binary per-play metric aggregated to game level, then rolled. |
-| Red zone efficiency (off + def) | Scoring when close matters more than moving the ball between the 20s | Medium | Filter plays inside opponent 20, compute TD rate. |
-| Weighted rolling averages (recency bias) | Recent games matter more than week 1 performance; exponential decay weighting | Medium | Apply exponential or linear decay to rolling window. Tunable decay parameter. |
-| Pace of play (plays per game, time of possession) | Captures game style -- fast offenses create more variance | Low | Direct aggregation from play-by-play. |
-| Penalty rate differential | Undisciplined teams lose winnable games; often overlooked feature | Low | Penalties and penalty yards per game, rolling. |
-| Strength of schedule (computed) | Adjusts expectations based on who the team has faced | High | Compute from opponents' win rates or EPA ranks. Recursive dependency makes this tricky. |
-| Quarterback consistency (EPA std dev) | Low variance QBs win more reliably; captures "game manager" vs "gunslinger" | Medium | Standard deviation of per-play EPA for the QB, rolled across games. |
-
-### Prediction Output Features (Advanced)
+### Landing Page -- Advanced
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Calibrated probabilities (Platt scaling or isotonic regression) | Raw XGBoost probabilities are often not well-calibrated; "70% confidence" should mean 70% win rate historically | Medium | Post-hoc calibration on validation set. Display calibration curve in dashboard. |
-| Feature importance via SHAP (training/eval only) | Understand which features drive predictions, catch leakage signals, validate model behavior | Medium | Compute TreeSHAP during training and log summary to experiments.jsonl. Do NOT expose per-prediction SHAP at inference time — adds dependency, slows serving, and requires significant dashboard design to display meaningfully. Dashboard display is out of scope for v1. |
-| Confidence tiers (high/medium/low) | Not all picks are equal; users want to know which to trust most | Low | Bucket predictions by probability distance from 0.5. Easy to implement, high UX value. |
-| Calibration plot (predicted vs actual win rate) | Visual proof the model's probabilities are meaningful | Medium | Group predictions into probability bins, plot actual win rate vs predicted. |
+| Live hero stat from API | Instead of a hardcoded "63.7%", fetch the actual current accuracy from `/api/model/info`. Shows the system is alive and updating. | Low | Single API call. Falls back to static text if API is down. The useModelInfo hook already exists. |
+| "Model vs Baselines" visual comparison | A simple bar chart or comparison showing model accuracy vs "always pick home team" and "always pick better record" baselines. This is the credibility proof visitors need. | Medium | Three horizontal bars with labels. Can be pure CSS (no charting library needed). Data from modelInfo endpoint. |
+| Season-at-a-glance mini stats | Show current season record (e.g., "142-98") with a win percentage badge. Gives visitors a sense of volume and recency. | Low | Data from prediction history endpoint. Single summary card. |
+| Image placeholders for future screenshots | The PROJECT.md mentions image placeholders. Reserve space for dashboard screenshots that can be added later without layout changes. | Low | Use a styled placeholder div with a subtle pattern or icon. Aspect ratio locked to prevent layout shift when real images are added. |
+| Animated step transitions on scroll | How-it-works steps animate in as user scrolls. Adds polish without requiring external dependencies. | Low | CSS `@keyframes` with `IntersectionObserver` for scroll-triggered entrance. No library needed. Degrades gracefully (content just appears without animation). |
 
-### Dashboard Features (Advanced)
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Team-level deep dive page | Click a team to see its rolling stats, prediction history, feature trends | High | Requires per-team data views and charts. Great for engagement but significant frontend work. |
-| Weekly recap with correct/incorrect highlighting | After games complete, show which picks were right/wrong with visual indicators | Medium | Requires result ingestion after game day. Green/red styling on predictions. |
-| Model performance over time chart | Line chart of rolling accuracy by week -- shows if model is improving or degrading | Medium | Time series of cumulative or rolling accuracy. Reveals model drift. |
-| Feature importance global view | Bar chart of most important features across all predictions | Medium | XGBoost feature_importances_ displayed in dashboard. Helps users understand the model. |
-
-### Experiment Tracking Features (Advanced)
+### Design System -- Advanced
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Automated experiment loop (autoresearch pattern) | Agent-driven experimentation accelerates iteration; the agent reads program.md, picks experiments, runs them, logs results | High | Core to the project spec. Requires careful design of the loop, guardrails, and revert logic. |
-| Hyperparameter logging and comparison | Track not just features but learning rate, max depth, etc. per run | Low | Log full XGBoost params dict to experiments.jsonl and MLflow. |
-| Experiment tagging/categorization | Group experiments by type (feature engineering, hyperparameter tuning, architecture change) | Low | Add a "category" field to experiment logs. |
-| Reproducibility (random seed + data hash) | Every experiment must be reproducible -- log the seed and a hash of the training data | Low | Essential for debugging. Log random_state and a hash of feature matrix shape + sample values. |
-| Program.md experiment backlog | A living document of experiment ideas for the autoresearch agent to consume | Low | Markdown file listing hypotheses to test. Agent reads and picks next. |
+| Theme toggle (dark/light) matching silverreyes.net | Full theme toggle like the parent site, stored in localStorage, using `data-theme` attribute. Signals design maturity and consistency with the parent brand. | Medium | Requires defining complete light mode token set. The shadcn `@custom-variant dark (&:is(.dark *))` needs reworking to use `data-theme` instead. Test all components in both modes. |
+| Smooth theme transition | `transition: background-color 0.2s ease, color 0.2s ease` on body/cards for smooth theme switch. silverreyes.net does this. | Low | Single CSS rule. Trivial to add, noticeable polish. |
+| Branded favicon and meta tags | `<title>` and meta description matching the subdomain identity. Currently uses generic "NFL Predictor" titles. | Low | Update `index.html` head. Add Open Graph tags for social sharing. |
+
+### Experiments Page -- Advanced
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Spread experiments alongside classifier experiments | Currently only classifier experiments are shown. Spread experiments exist in `spread_experiments.jsonl` but have no API or frontend. Showing both model types gives a complete picture. | High | Requires: new API endpoint to serve spread experiments, new TypeScript types, potentially tabbed or filtered view to separate the two experiment types. Different metric schemas (accuracy vs MAE). |
+| Experiment timeline / progression view | Show experiments in chronological order with a visual timeline showing how accuracy improved over iterations. Tells the "story" of model development. | Medium | A vertical timeline with experiment dots, connected by lines. Color-coded kept/reverted. Accuracy on y-axis or as labels. Pure CSS + SVG, no charting library needed. |
+| Sortable by multiple metrics | Current table sorts by experiment_id or val_accuracy_2023 only. Users may want to sort by log_loss, brier_score, or any validation year. | Low | Extend the existing sort handler to support additional SortField values. The UI patterns are already built. |
+| Search/filter by hypothesis text | With only 5 classifier experiments this is unnecessary, but if experiments grow it becomes valuable. | Low | Simple text input filtering the experiments array. |
+| Delta from previous best | Show "+1.68pp" or "-6.47pp" change from previous best accuracy. The data already exists in `prev_best_acc` field. | Low | Compute `val_accuracy_2023 - prev_best_acc`, format as pp delta with green/red coloring. Data is already in the ExperimentResponse type. |
+
+---
 
 ## Anti-Features
 
-Features to explicitly NOT build.
+Features to explicitly NOT build in v1.2.
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| Live in-game win probability | Entirely different problem (real-time data, play-level model, websocket streaming); massive scope creep | Stay pre-game only. In-game models are a separate project. |
-| Vegas odds / spread integration | Adds data source complexity, legal/licensing questions, and conflates the model's signal with market signal | Use model probability as the sole confidence signal. Compare to Vegas as an external benchmark only if desired later. |
-| Player-level injury tracking | Requires unreliable data sources (injury reports are gamed), player-level modeling is far more complex, and data quality is poor | Use team-level aggregates. If a star player is out, it shows up in team EPA eventually. |
-| User accounts and authentication | Over-engineering for v1; adds auth complexity, session management, password handling | Open read access or single-user. Add auth only if/when multi-user demand exists. |
-| Betting recommendations / "pick of the day" | Legal liability, gambling addiction concerns, and the model is not proven profitable against the spread | Show predictions and confidence only. Never frame output as betting advice. |
-| Complex multi-model ensembles in v1 | Premature optimization; get one model right first | Start with XGBoost. Only ensemble after understanding single-model behavior deeply. |
-| Real-time score scraping | Fragile, rate-limited, and not needed for pre-game predictions | Use nfl-data-py's weekly data refresh which updates after games complete. |
-| Over-engineered feature store | Feature stores (Feast, etc.) add infrastructure for scale you do not have | Compute features in pandas, store in PostgreSQL. A feature store is warranted at 100+ features and multiple consumers. |
-| Mobile app | Significant additional development surface; web dashboard works on mobile browsers | Build a responsive web dashboard. If mobile demand appears, consider PWA before native. |
-| Chat/AI explanation interface | "Ask the model why" via LLM is flashy but unreliable and expensive | Use SHAP values for explainability. Static feature importance is more trustworthy than generated explanations. |
+| Full design system component library | Building a standalone Storybook-documented component library is massive scope. shadcn/ui components already work; they just need token reskinning. | Reskin existing shadcn components via CSS custom properties. Do not extract, wrap, or rebuild them. |
+| Interactive data visualizations on landing page | D3/Chart.js charts on the landing page add complexity, bundle size, and distract from the simple message. The landing page should be informational, not analytical. | Use CSS-only visual elements (bars, badges, stat cards). Save charts for the Accuracy page. |
+| Landing page SEO optimization | Server-side rendering, meta tag optimization, and sitemap generation are not needed for a personal project subdomain. The audience finds it through the parent site. | Set basic meta tags. Skip SSR, structured data, and sitemap. |
+| Per-experiment comparison mode (side-by-side) | MLflow-style parallel comparison requires significant UI (checkbox selection, diff view, metric charts). With 5-10 experiments, just scrolling through expanded details is sufficient. | Keep the expandable detail view. Each experiment shows full context inline. If comparison is needed later, it's a v1.3+ feature. |
+| Betting-framed landing page copy | "Beat the spread" or "Make smarter bets" language is explicitly out of scope per project constraints. The landing page must frame this as a prediction accuracy project, not a gambling tool. | Frame as: "Can machine learning predict NFL game outcomes?" Use accuracy metrics, not profit/loss language. |
+| Custom animation library | Framer Motion or GSAP for page transitions and micro-interactions. Adds dependency weight for minimal gain on a data dashboard. | Use CSS transitions and `@keyframes`. The silverreyes.net parent site achieves all its animations with pure CSS. |
+| Mobile-specific navigation redesign | The current sidebar collapses to a horizontal top nav on mobile. This works fine. Redesigning mobile nav for the landing page is a rabbit hole. | Keep the existing mobile nav pattern from Sidebar.tsx. Landing page uses the same AppLayout. |
+
+---
 
 ## Feature Dependencies
 
 ```
-Data Ingestion (nfl-data-py) --> Play-by-Play Storage (PostgreSQL)
+Design System Token Definition (index.css)
   |
-  v
-Game-Level Feature Engineering --> Rolling/Aggregate Features
-  |                                    |
-  |                                    v
-  |                              Opponent-Adjusted Features
-  |                                    |
-  v                                    v
-Feature Matrix (no leakage) ---------> Model Training (XGBoost)
-  |                                    |
-  |                                    v
-  |                              Experiment Logging (experiments.jsonl + MLflow)
-  |                                    |
-  |                                    v
-  |                              Keep/Revert Decision
-  |                                    |
-  v                                    v
-Prediction Generation ----------> Calibrated Probabilities
-  |                                    |
-  v                                    v
-FastAPI Endpoints ------------> React Dashboard
-  |                                    |
-  v                                    |
-Weekly Data Refresh Pipeline           |
-  |                                    |
-  v                                    v
-Automated Retrain ----------------> Updated Predictions
+  +--> All Component Reskinning (Cards, Badges, Tables, Sidebar, etc.)
+  |      |
+  |      +--> Landing Page (uses reskinned components)
+  |      |
+  |      +--> Experiments Page Redesign (uses reskinned components)
+  |      |
+  |      +--> Existing Pages Visual Update (automatic via token cascade)
+  |
+  +--> Landing Page Route Setup (App.tsx routing change)
+  |      |
+  |      +--> Off-Season Default Routing (/ -> Home, /this-week -> ThisWeek)
+  |      |
+  |      +--> Sidebar Navigation Update (add Home link, update paths)
+  |
+  +--> Landing Page Content
+         |
+         +--> Hero Section (stat from useModelInfo hook)
+         |
+         +--> How-It-Works Section (static content)
+         |
+         +--> Explore CTAs (links to existing pages)
+         |
+         +--> Model Credentials (stats from API)
+
+Experiments Page Redesign
+  |
+  +--> Replace Table layout with Card layout
+  |      |
+  |      +--> ExperimentCard component (new)
+  |      |
+  |      +--> ExperimentDetail component (existing, reuse)
+  |
+  +--> Full hypothesis display (remove truncation)
+  |
+  +--> Delta from previous best display (uses existing prev_best_acc data)
+  |
+  +--> [Optional] Spread experiments API + display (new endpoint, new types)
 ```
 
-Key dependency chains:
-- EPA features require play-by-play data (not just game summaries)
-- Opponent-adjusted features require all teams' base features to be computed first
-- Calibrated probabilities require a trained model and a calibration dataset
-- SHAP (training-time only) requires a trained model and the feature matrix — computed once after training, not at inference
-- The autoresearch loop requires experiment logging to be working first
-- Dashboard accuracy tracking requires stored predictions AND game results
+**Critical path:** Design tokens MUST be defined before any visual work begins. Everything cascades from the CSS custom property layer.
+
+**Parallel work:** Landing page content and experiments redesign are independent once tokens are defined. They can be built simultaneously.
+
+---
 
 ## MVP Recommendation
 
-Prioritize (Phase 1 - Get a Working Model):
-1. **Data ingestion + basic rolling features** (yards, points, turnovers, EPA per play, home/away, rest days)
-2. **Leakage-safe feature engineering pipeline** -- this is the hardest part to get right and the easiest to get wrong
-3. **XGBoost training with temporal split** and logging to experiments.jsonl
-4. **Binary prediction + raw probability output**
-5. **Basic accuracy tracking** (model vs coin flip vs home-team-always-wins baselines)
-6. **SHAP feature importance** computed post-training, logged to experiments.jsonl — training/eval tool only, not served at inference
+### Must ship (v1.2 core):
 
-Prioritize (Phase 2 - Dashboard + Experiment Loop):
-7. **FastAPI endpoints** for current picks and historical accuracy
-8. **React dashboard** with this-week's-picks view and season accuracy
-9. **MLflow integration** for visual experiment comparison
-10. **Autoresearch experiment loop** (agent-driven iteration on models/train.py)
+1. **Design system tokens in index.css** -- Map silverreyes.net palette, typography, and spacing tokens into the existing `@theme inline` block. This is the foundation everything else builds on.
 
-Prioritize (Phase 3 - Polish + Advanced Features):
-11. **Probability calibration** (Platt scaling)
-12. **Advanced engineered features** (CPOE, success rate, weighted rolling averages, opponent adjustments)
-13. **Weekly recap view** with correct/incorrect highlighting
-14. **Model performance over time chart**
+2. **Landing page with hero, how-it-works, and explore CTAs** -- Static content with optional API-fed hero stat. This is the project's new front door and the primary deliverable visible to visitors.
 
-Defer indefinitely:
-- **Player-level features**: team aggregates are sufficient and far simpler
-- **Live predictions**: entirely different architecture
-- **Vegas integration**: different problem domain
-- **Multi-model ensembles**: premature until single model is well-understood
+3. **Route restructure** -- Move index to landing page, ThisWeekPage to `/this-week`. Update sidebar. Solves the off-season empty-state problem permanently.
 
-## Engineered Feature Priority (What Actually Predicts NFL Wins)
+4. **Accent color and border token migration** -- Replace all hardcoded `blue-400`/`blue-500`/`zinc-800` classes across components with semantic token references. This is the work that makes the dashboard feel cohesive with silverreyes.net.
 
-Based on established NFL analytics literature and the features available in nfl-data-py:
+5. **Experiments page: full hypothesis + card layout** -- Remove truncation, replace table with cards, keep existing ExperimentDetail content intact.
 
-### Tier 1 -- Build First (Highest Predictive Value)
-| Feature | Why It Matters |
-|---------|---------------|
-| EPA per play (off + def, rolling) | THE best single feature family for NFL prediction. Accounts for situation, field position, and down/distance. Available per-play in nfl-data-py. |
-| Point differential (rolling) | Direct outcome signal. Highly correlated with future wins. Simple but strong. |
-| Turnover differential (rolling) | Turnovers swing games. Net turnovers per game is a top-5 predictor in most published models. |
-| Home/away | Consistent ~2.5 point advantage. Free, simple, always available. |
+### Defer to later (nice-to-have or v1.3):
 
-### Tier 2 -- Build Second (Strong Signal, Moderate Complexity)
-| Feature | Why It Matters |
-|---------|---------------|
-| Third-down conversion rate (off + def) | Sustaining drives vs forcing punts. Strong proxy for execution quality. |
-| Success rate (% positive EPA plays) | Captures consistency. A team with 50% success rate is more reliable than one averaging same EPA with 30% success rate and big plays. |
-| Rest days / bye indicator | Thursday games after Sunday = measurable performance drop. Bye weeks = slight boost. |
-| Sack rate (off + def) | Pass protection quality and pass rush quality. Derived from play-by-play sack flags. |
-| Rushing yards before contact (off) | Proxy for offensive line quality, which is hard to measure directly. |
+- **Theme toggle (dark/light)**: Ship dark-only for v1.2. The light mode token set needs testing across all components.
+- **Spread experiments display**: Requires new API endpoint and different metric schemas. Better as its own scoped feature.
+- **Experiment timeline visualization**: Polish feature. The card-based redesign is the priority.
+- **Animated scroll transitions**: CSS animations can be added after content is finalized without layout changes.
+- **Live hero stat from API**: Start with static numbers. Wire up API later since the hook already exists.
 
-### Tier 3 -- Build for Marginal Gains (Diminishing Returns)
-| Feature | Why It Matters |
-|---------|---------------|
-| CPOE | Good QB signal but partially captured by passing EPA already. |
-| Red zone efficiency | Matters but small sample sizes per game make rolling averages noisy. |
-| Pace / plays per game | Stylistic signal. Fast teams create variance. |
-| Opponent-adjusted metrics | Theoretically ideal but computationally complex and recursive. |
-| Penalty differential | Real but weak signal. Often more noise than signal. |
-
-### Data Leakage Prevention -- Features to NEVER Compute Wrong
-| Leakage Risk | What Goes Wrong | Prevention |
-|--------------|----------------|------------|
-| Using current-game stats as features | Model sees the outcome in the inputs; 95%+ accuracy that means nothing | Features must be computed from games STRICTLY before the game being predicted |
-| Including future games in rolling averages | Leaks future performance into past predictions | Sort by game date, use `.shift(1)` or equivalent before rolling |
-| Season-level aggregates including current game | Subtle leakage -- season averages include the game you're predicting | Always exclude current game from any aggregate |
-| Test data in training | Temporal split violation | Hard partition: train <= 2022, val = 2023, test = 2024. Never shuffle. |
-| Feature scaling fit on full dataset | Scaler sees test distribution | Fit scaler on training data only, transform val/test |
+---
 
 ## Sources
 
-- Domain knowledge from NFL analytics community (nflfastR/nfl-data-py ecosystem)
-- Established literature on EPA-based prediction models
-- XGBoost documentation for feature importance and SHAP integration
-- MLflow documentation for experiment tracking patterns
-- Note: Web search was unavailable during research; findings are based on training knowledge (MEDIUM confidence)
+- silverreyes.net design system analysis via WebFetch (CSS tokens, typography, card patterns, theme toggle implementation)
+- Existing codebase analysis: `index.css` (current token definitions), all 31 .tsx components, experiment data schemas
+- Hero section best practices: [LogRocket](https://blog.logrocket.com/ux-design/hero-section-examples-best-practices/), [Prismic](https://prismic.io/blog/website-hero-section), [Perfect Afternoon](https://www.perfectafternoon.com/2025/hero-section-design/)
+- Data table UX patterns: [Pencil & Paper](https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-data-tables), [UX Patterns Dev](https://uxpatterns.dev/patterns/data-display/table)
+- Empty state design: [NN/g](https://www.nngroup.com/articles/empty-state-interface-design/), [Carbon Design System](https://carbondesignsystem.com/patterns/empty-states-pattern/)
+- shadcn/ui Tailwind v4 migration: [shadcn docs](https://ui.shadcn.com/docs/tailwind-v4), [Shadcnblocks](https://www.shadcnblocks.com/blog/tailwind4-shadcn-themeing/)
+- Design system migration patterns: [Mercari Engineering](https://engineering.mercari.com/en/blog/entry/20221207-web-design-system-migrating-web-components-to-react/), [HashByt](https://hashbyt.com/blog/migrate-react-uis)
+- ML explanation for non-technical users: [MIT Sloan](https://mitsloan.mit.edu/ideas-made-to-matter/machine-learning-explained), [IBM](https://www.ibm.com/think/topics/machine-learning-algorithms)
