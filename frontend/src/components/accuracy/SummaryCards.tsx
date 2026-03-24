@@ -81,7 +81,7 @@ export function SummaryCards({
       <Card className="flex-1">
         <CardContent className="p-4">
           <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">
-            vs Better-Record
+            vs Team w/ Better Record
             <InfoTooltip text="Baseline that always picks the team with the better record. This is a tougher benchmark — it uses the wisdom of the season so far. The badge shows how the model compares." />
           </p>
           <p className="text-[28px] font-semibold leading-tight">
