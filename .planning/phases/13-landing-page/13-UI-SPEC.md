@@ -45,7 +45,7 @@ Declared values (must be multiples of 4):
 Exceptions: none
 
 Section padding specifics:
-- Hero section: `py-16 md:py-24` (64px / 96px) with `min-h-[50vh] md:min-h-[65vh]`
+- Hero section: `py-16` (64px top and bottom) on all breakpoints, with `min-h-[50vh] md:min-h-[65vh]`
 - How It Works section: `py-16` (64px top and bottom)
 - Banner image section: `py-8` (32px top and bottom)
 - CTA section: `py-16` (64px top and bottom)
@@ -60,21 +60,28 @@ Source: CONTEXT.md "generous vertical padding within sections", CONTEXT.md "max-
 
 ## Typography
 
-| Role | Element | Size (mobile) | Size (desktop) | Weight | Line Height | Font |
-|------|---------|---------------|----------------|--------|-------------|------|
-| Display | Hero headline "NFL Nostradamus" | 36px (text-4xl) | 48px (text-5xl) | 700 (bold) | 1.1 | Syne |
-| Stat | Accuracy number "62.9%" | 48px (text-5xl) | 72px (text-7xl) | 700 (bold) | 1.0 | Syne |
-| Heading | Section titles ("How It Works") | 24px (text-2xl) | 24px (text-2xl) | 600 (semibold) | 1.2 | Syne |
-| Body | Subtitle tagline | 16px (text-base) | 18px (text-lg) | 400 (regular) | 1.5 | IBM Plex Mono |
-| Body | How It Works card stat text | 16px (text-base) | 16px (text-base) | 400 (regular) | 1.5 | IBM Plex Mono |
-| Label | How It Works card category | 14px (text-sm) | 14px (text-sm) | 600 (semibold) | 1.4 | IBM Plex Mono |
-| Label | "validation accuracy" under stat | 14px (text-sm) | 14px (text-sm) | 400 (regular) | 1.4 | IBM Plex Mono |
-| Small | Footer text, secondary links | 14px (text-sm) | 14px (text-sm) | 400 (regular) | 1.5 | IBM Plex Mono |
+4 declared roles, 2 declared weights (400 regular, 700 bold):
+
+| Role | Element | Size | Weight | Line Height | Font |
+|------|---------|------|--------|-------------|------|
+| Display | Hero headline "NFL Nostradamus", accuracy stat "62.9%" | 36-72px (see responsive table) | 700 (bold) | 1.0-1.1 | Syne |
+| Heading | Section titles ("How It Works") | 24px (text-2xl) | 700 (bold) | 1.2 | Syne |
+| Body | Subtitle tagline, How It Works card stat text | 16-18px (see responsive table) | 400 (regular) | 1.5 | IBM Plex Mono |
+| Label | How It Works card category, "validation accuracy" label, footer text, secondary links | 14px (text-sm) | 400 (regular) | 1.4 | IBM Plex Mono |
+
+Responsive size mapping (each row is a single role, not separate sizes):
+
+| Role | Element | Mobile (<768px) | Desktop (md: 768px+) |
+|------|---------|-----------------|----------------------|
+| Display | Hero headline | text-4xl (36px) | text-5xl (48px) |
+| Display | Accuracy stat | text-5xl (48px) | text-7xl (72px) |
+| Body | Subtitle tagline | text-base (16px) | text-lg (18px) |
 
 Additional typography rules:
-- How It Works card category labels use `uppercase tracking-wide` for visual hierarchy
+- How It Works card category labels use `font-bold uppercase tracking-wide` for visual hierarchy
 - "validation accuracy" label uses `uppercase tracking-widest` for stat attribution
 - Hero headline uses `tracking-tight` for display density
+- Hero stat uses line-height 1.0 (tighter); hero headline uses line-height 1.1
 - All h1/h2/h3 elements automatically render in Syne via `@layer base` rule in `index.css`
 - `font-display` utility class maps to Syne for non-heading elements that need the display font
 
@@ -151,7 +158,7 @@ Source: RESEARCH.md Anti-Patterns, RESEARCH.md Pattern 5 + 6, CONTEXT.md How It 
 
 The landing page consists of 5 sections in this exact order, with `border-t border-border` separators between each:
 
-1. **Hero Section** -- min-h-[50vh] md:min-h-[65vh], centered text, gradient overlay
+1. **Hero Section** -- min-h-[50vh] md:min-h-[65vh], py-16, centered text, gradient overlay
 2. **Separator** -- `border-t border-border`
 3. **How It Works Section** -- py-16, 2x2 grid (md:grid-cols-2, grid-cols-1)
 4. **Separator** -- `border-t border-border`
@@ -174,14 +181,14 @@ Source: CONTEXT.md page structure decisions.
 | Hero subtitle | 20 seasons of play-by-play data. 17 engineered features. One question: who wins Sunday? | `text-base md:text-lg text-muted-foreground` |
 | Hero stat number | 62.9% | `text-5xl md:text-7xl font-bold text-primary` (Syne via font-display) |
 | Hero stat label | validation accuracy | `text-sm text-muted-foreground uppercase tracking-widest` |
-| Section heading | How It Works | `text-2xl font-semibold text-foreground` (Syne via h2) |
-| HIT block 1 label | Data | `text-sm font-semibold uppercase tracking-wide text-muted-foreground` |
+| Section heading | How It Works | `text-2xl font-bold text-foreground` (Syne via h2) |
+| HIT block 1 label | Data | `text-sm font-bold uppercase tracking-wide text-muted-foreground` |
 | HIT block 1 stat | 20 seasons, ~1.2M plays | `text-base text-foreground` |
-| HIT block 2 label | Features | `text-sm font-semibold uppercase tracking-wide text-muted-foreground` |
+| HIT block 2 label | Features | `text-sm font-bold uppercase tracking-wide text-muted-foreground` |
 | HIT block 2 stat | 17 game-level features, temporal boundaries | `text-base text-foreground` |
-| HIT block 3 label | Models | `text-sm font-semibold uppercase tracking-wide text-muted-foreground` |
+| HIT block 3 label | Models | `text-sm font-bold uppercase tracking-wide text-muted-foreground` |
 | HIT block 3 stat | XGBoost 63.7% + Ridge ~10pt MAE | `text-base text-foreground` |
-| HIT block 4 label | Pipeline | `text-sm font-semibold uppercase tracking-wide text-muted-foreground` |
+| HIT block 4 label | Pipeline | `text-sm font-bold uppercase tracking-wide text-muted-foreground` |
 | HIT block 4 stat | Automated weekly refresh + human approval gate | `text-base text-foreground` |
 | Primary CTA | Explore Prediction History | `buttonVariants({ size: "lg" })` with `px-8 text-base` override |
 | Secondary link 1 | Accuracy | `text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline` |
@@ -229,8 +236,8 @@ Source: CONTEXT.md banner image section, RESEARCH.md Pitfall 1.
 
 | Breakpoint | Behavior |
 |------------|----------|
-| Mobile (<768px / default) | Hero `min-h-[50vh]`, headline `text-4xl`, stat `text-5xl`, subtitle `text-base`, How It Works `grid-cols-1`, all content `px-6` |
-| Desktop (md: 768px+) | Hero `min-h-[65vh]`, headline `text-5xl`, stat `text-7xl`, subtitle `text-lg`, How It Works `grid-cols-2` |
+| Mobile (<768px / default) | Hero `min-h-[50vh]` `py-16`, headline `text-4xl`, stat `text-5xl`, subtitle `text-base`, How It Works `grid-cols-1`, all content `px-6` |
+| Desktop (md: 768px+) | Hero `min-h-[65vh]` `py-16`, headline `text-5xl`, stat `text-7xl`, subtitle `text-lg`, How It Works `grid-cols-2` |
 
 Critical constraint (LAND-07): Hero headline + accuracy stat MUST be visible without scrolling on mobile viewports (375px width, 667px height minimum). The `min-h-[50vh]` on mobile ensures the hero does not consume the entire viewport, allowing the top of How It Works to peek in and signal more content below.
 
