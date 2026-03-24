@@ -54,11 +54,11 @@ Full details archived to `milestones/v1.1-ROADMAP.md`
   2. All headings render in Syne and all body/code text renders in IBM Plex Mono, with no flash of unstyled text on page load
   3. No hardcoded Tailwind color classes (zinc-*, blue-*, gray-*) remain in any component -- all colors reference semantic CSS custom properties
   4. All shadcn/ui components (buttons, cards, tooltips, dropdowns) display correctly with the remapped theme tokens -- no broken styles, missing borders, or invisible text
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 11-01: TBD
-- [ ] 11-02: TBD
+- [ ] 11-01-PLAN.md — Theme foundation: silverreyes.net palette, @fontsource fonts, tier/status tokens
+- [ ] 11-02-PLAN.md — Component migration: replace all hardcoded Tailwind color classes with semantic tokens
 
 ### Phase 12: Route Restructure and Navigation
 **Goal**: The application routes are reorganized so `/` serves the landing page in a standalone layout while all dashboard pages live under their own routes with the sidebar, and navigation reflects the new structure
@@ -123,7 +123,7 @@ Note: Phases 13 and 14 are independent and could execute in either order once 11
 | 8. Database and API Integration | v1.1 | 2/2 | Complete | 2026-03-23 |
 | 9. Dashboard Integration | v1.1 | 3/3 | Complete | 2026-03-23 |
 | 10. Pipeline and Production Deployment | v1.1 | 2/2 | Complete | 2026-03-24 |
-| 11. Design System Foundation | v1.2 | 0/0 | Not started | - |
+| 11. Design System Foundation | v1.2 | 0/2 | Not started | - |
 | 12. Route Restructure and Navigation | v1.2 | 0/0 | Not started | - |
 | 13. Landing Page | v1.2 | 0/0 | Not started | - |
 | 14. Experiments Redesign | v1.2 | 0/0 | Not started | - |
