@@ -72,7 +72,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 12-01-PLAN.md — Route restructure: two layout branches (LandingLayout + AppLayout), Home nav item, sidebar branding update
+- [x] 12-01-PLAN.md — Route restructure: two layout branches (LandingLayout + AppLayout), Home nav item, sidebar branding update
 
 ### Phase 13: Landing Page
 **Goal**: Visitors arriving at `/` see a polished, informative landing page that communicates what Nostradamus does, how it works, and invites them to explore the dashboard
@@ -84,11 +84,10 @@ Plans:
   3. Landing page displays explore CTAs -- a primary amber "Explore Prediction History" button and secondary links to Accuracy and Experiments -- that navigate to the correct dashboard routes
   4. Landing page displays a footer with "Built by Silver Reyes" linking to silverreyes.net and a GitHub link
   5. Landing page is responsive -- hero headline and accuracy stat are visible without scrolling on mobile viewports
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 13-01: TBD
-- [ ] 13-02: TBD
+- [ ] 13-01-PLAN.md — Full landing page content: hero, how-it-works, banner image, CTAs, footer, and visual verification
 
 ### Phase 14: Experiments Redesign
 **Goal**: The experiments page presents each experiment with full context and proper visual hierarchy, making it easy to scan, compare, and understand what was tested and why
@@ -124,6 +123,6 @@ Note: Phases 13 and 14 are independent and could execute in either order once 11
 | 9. Dashboard Integration | v1.1 | 3/3 | Complete | 2026-03-23 |
 | 10. Pipeline and Production Deployment | v1.1 | 2/2 | Complete | 2026-03-24 |
 | 11. Design System Foundation | v1.2 | 2/2 | Complete | 2026-03-24 |
-| 12. Route Restructure and Navigation | 1/1 | Complete    | 2026-03-24 | - |
-| 13. Landing Page | v1.2 | 0/0 | Not started | - |
+| 12. Route Restructure and Navigation | v1.2 | 1/1 | Complete | 2026-03-24 |
+| 13. Landing Page | v1.2 | 0/1 | Not started | - |
 | 14. Experiments Redesign | v1.2 | 0/0 | Not started | - |
