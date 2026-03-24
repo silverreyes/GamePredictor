@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Design & Landing Page
 status: planning
-stopped_at: Phase 11 UI-SPEC approved
-last_updated: "2026-03-24T17:37:07.575Z"
+stopped_at: Phase 12 context gathered
+last_updated: "2026-03-24T18:21:38.708Z"
 last_activity: 2026-03-24 -- Roadmap created for v1.2 milestone
 progress:
   total_phases: 4
@@ -54,6 +54,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-24T14:55:53.599Z
-Stopped at: Phase 11 UI-SPEC approved
-Resume file: .planning/phases/11-design-system-foundation/11-UI-SPEC.md
+Last session: 2026-03-24T18:21:38.705Z
+Stopped at: Phase 12 context gathered
+Resume file: .planning/phases/12-route-restructure-and-navigation/12-CONTEXT.md
