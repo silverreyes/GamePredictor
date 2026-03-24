@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Point Spread Model
-status: completed
-stopped_at: Phase 10 context gathered
-last_updated: "2026-03-23T22:53:01.560Z"
-last_activity: 2026-03-23 -- Completed 09-03 Accuracy page spread metrics (SpreadSummaryCards, agreement breakdown)
+status: in-progress
+stopped_at: Completed 10-01 spread pipeline step
+last_updated: "2026-03-24T00:10:07Z"
+last_activity: 2026-03-23 -- Completed 10-01 spread inference step 5 in weekly pipeline
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_plans: 10
+  completed_plans: 9
+  percent: 90
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** Pre-game win/loss predictions with calibrated confidence scores that beat trivial baselines on the 2023 validation season
-**Current focus:** v1.1 Point Spread Model -- Phase 9 complete, Phase 10 next
+**Current focus:** v1.1 Point Spread Model -- Phase 10 in progress
 
 ## Current Position
 
-Phase: 9 of 10 (Dashboard Integration) -- COMPLETE
-Plan: 3 of 3 (Phase 9) -- done
-Status: Phase 9 complete, ready for Phase 10
-Last activity: 2026-03-23 -- Completed 09-03 Accuracy page spread metrics (SpreadSummaryCards, agreement breakdown)
+Phase: 10 of 10 (Pipeline and Production Deployment)
+Plan: 1 of 2 (Phase 10) -- 10-01 complete
+Status: Phase 10 in progress, plan 02 next
+Last activity: 2026-03-23 -- Completed 10-01 spread inference step 5 in weekly pipeline
 
-Progress: [██████████] 100% (8/8 v1.1 plans complete)
+Progress: [█████████░] 90% (9/10 v1.1 plans complete)
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Progress: [██████████] 100% (8/8 v1.1 plans complete)
 | 09 | 01 | 3min | 2 | 6 |
 | 09 | 02 | 3min | 2 | 6 |
 | 09 | 03 | 4min | 2 | 2 |
+| 10 | 01 | 15min | 1 | 2 |
 
 ## Accumulated Context
 
@@ -76,6 +77,10 @@ Full decision log in PROJECT.md Key Decisions table.
 **v1.1 Phase 9:**
 - 09-02: SpreadLabel props accept null | undefined to match API type convention (actual_spread is null before game completes)
 
+**v1.1 Phase 10:**
+- 10-01: Mirrored step 4 pattern for step 5 (consistent function signature and non-fatal error handling)
+- 10-01: Non-fatal step 5 preserves classifier predictions from step 4 on spread failure
+
 **v1.1 Phase 7:**
 - 07-01: Used params.pop() to extract objective from hyperparams dict, enabling alternative loss functions
 - 07-01: Created spread_program.md with Exp 1 baselines and experiment queue (Exps 2-5)
@@ -95,6 +100,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-23T22:53:01.557Z
-Stopped at: Phase 10 context gathered
-Resume file: .planning/phases/10-pipeline-and-production-deployment/10-CONTEXT.md
+Last session: 2026-03-24T00:10:07Z
+Stopped at: Completed 10-01 spread pipeline step
+Resume file: .planning/phases/10-pipeline-and-production-deployment/10-02-PLAN.md

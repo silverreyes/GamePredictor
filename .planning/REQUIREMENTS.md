@@ -31,7 +31,7 @@ Requirements for the Point Spread Model milestone. Each maps to roadmap phases.
 
 ### Pipeline & Deployment
 
-- [ ] **PIPE-01**: Weekly pipeline generates spread predictions (inference only, no retrain) for current week alongside classifier predictions
+- [x] **PIPE-01**: Weekly pipeline generates spread predictions (inference only, no retrain) for current week alongside classifier predictions
 - [ ] **PIPE-02**: Seed script generates historical spread predictions for completed games (2023 validation season)
 - [ ] **PIPE-03**: All changes deployed to production VPS at nostradamus.silverreyes.net
 
@@ -85,7 +85,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DASH-02 | Phase 9 | Complete |
 | DASH-03 | Phase 9 | Complete |
 | DASH-04 | Phase 9 | Complete |
-| PIPE-01 | Phase 10 | Pending |
+| PIPE-01 | Phase 10 | Complete |
 | PIPE-02 | Phase 10 | Pending |
 | PIPE-03 | Phase 10 | Pending |
 
