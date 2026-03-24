@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Point Spread Model
-status: completed
-stopped_at: v1.1 milestone complete -- all 10 plans executed
-last_updated: "2026-03-24T01:15:00Z"
-last_activity: 2026-03-23 -- Completed 10-02 seed script and Docker infrastructure
+status: shipped
+stopped_at: v1.1 milestone archived and tagged
+last_updated: "2026-03-24T04:30:00Z"
+last_activity: 2026-03-24 -- Milestone v1.1 archived and closed
 progress:
   total_phases: 4
   completed_phases: 4
@@ -18,80 +18,25 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-22)
+See: .planning/PROJECT.md (updated 2026-03-24)
 
-**Core value:** Pre-game win/loss predictions with calibrated confidence scores that beat trivial baselines on the 2023 validation season
-**Current focus:** v1.1 Point Spread Model -- COMPLETE
+**Core value:** Pre-game win/loss and point spread predictions that beat trivial baselines
+**Current focus:** v1.1 shipped -- ready for /gsd:new-milestone
 
 ## Current Position
 
-Phase: 10 of 10 (Pipeline and Production Deployment) -- COMPLETE
-Plan: 2 of 2 (Phase 10) -- all plans complete
-Status: v1.1 milestone fully complete
-Last activity: 2026-03-23 -- Completed 10-02 seed script and Docker infrastructure
+Phase: All complete
+Plan: All complete
+Status: v1.1 shipped and deployed to nostradamus.silverreyes.net
+Last activity: 2026-03-24 -- Milestone archived
 
-Progress: [██████████] 100% (10/10 v1.1 plans complete)
-
-## Performance Metrics
-
-**Velocity (from v1.0):**
-- Total plans completed: 18
-- Average duration: 5.8min
-- Total execution time: ~1.75 hours
-
-**v1.1 Execution:**
-
-| Phase | Plan | Duration | Tasks | Files |
-|-------|------|----------|-------|-------|
-| 07 | 01 | 36min | 2 | 3 |
-| 07 | 02 | 6min | 2 | 4 |
-| 07 | 03 | 2min | 2 | 2 |
-| 08 | 01 | 5min | 2 | 5 |
-| 08 | 02 | 11min | 2 | 7 |
-| 09 | 01 | 3min | 2 | 6 |
-| 09 | 02 | 3min | 2 | 6 |
-| 09 | 03 | 4min | 2 | 2 |
-| 10 | 01 | 15min | 1 | 2 |
-| 10 | 02 | 10min | 2 | 4 |
+Progress: [##########] 100% (10/10 v1.1 plans complete)
 
 ## Accumulated Context
 
 ### Decisions
 
 Full decision log in PROJECT.md Key Decisions table.
-
-**From v1.0:**
-- 06-01: Preserved log_experiment() with JSONL-only logging, removed MLflow side-effect entirely
-- 06-01: Removed setup_mlflow() function entirely rather than leaving as no-op
-- 06-02: Added .gitattributes for LF enforcement on shell scripts (prevents CRLF Docker breakage on Windows)
-
-**v1.1 prototyping:**
-- Spread training script (train_spread.py) mirrors classifier structure, loads target from parquet cache (no DB needed for training)
-- Spread Exp 1 baseline: MAE 10.68, RMSE 13.87, derived win accuracy 60.16% (vs classifier 62.89%)
-
-**v1.1 Phase 7:**
-- 07-01: Used params.pop() to extract objective from hyperparams dict, enabling alternative loss functions
-- 07-01: Created spread_program.md with Exp 1 baselines and experiment queue (Exps 2-5)
-- 07-01: 14-test suite covering all 5 TRAIN requirements (temporal split, metrics, baselines, logging, model save)
-- 07-02: Ship Exp 1 as production model -- no experiment beat baseline by >= 0.1 MAE (Exp 3 closest at 0.098)
-- 07-02: Skip Exp 5 -- none of Exps 2-4 showed sufficient improvement to warrant combination
-- 07-02: Fixed params.pop() mutation bug -- pass dict copy to preserve objective in JSONL log
-- 07-03: Patched existing Exp 2 JSONL entry in-place rather than appending duplicate re-run entry
-
-**v1.1 Phase 8:**
-- 08-01: Mirrored classifier function patterns for spread (load/select/generate) for consistency
-- 08-01: Home-team convention for zero spread (predicted_spread == 0.0 -> home wins)
-- 08-02: Spread endpoint uses path params {season}/{week} matching URL hierarchy convention
-- 08-02: Spread reload generates predictions only when both current week and spread info available
-
-**v1.1 Phase 9:**
-- 09-02: SpreadLabel props accept null | undefined to match API type convention (actual_spread is null before game completes)
-
-**v1.1 Phase 10:**
-- 10-01: Mirrored step 4 pattern for step 5 (consistent function signature and non-fatal error handling)
-- 10-01: Non-fatal step 5 preserves classifier predictions from step 4 on spread failure
-- 10-02: Mirrored classifier seed pattern for consistency with seed_predictions.py
-- 10-02: Separate entrypoint guard handles v1.0-to-v1.1 upgrade path
 
 ### Pending Todos
 
@@ -103,6 +48,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-24T01:15:00Z
-Stopped at: v1.1 milestone complete
-Resume file: N/A -- milestone complete, ready for /gsd:complete-milestone
+Last session: 2026-03-24T04:30:00Z
+Stopped at: v1.1 milestone complete and archived
+Resume file: N/A -- use /gsd:new-milestone for v1.2
