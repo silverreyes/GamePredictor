@@ -2,7 +2,7 @@
 
 ## What This Is
 
-An end-to-end NFL game outcome prediction system. Ingests 20 seasons of play-by-play data, engineers leakage-safe features, and runs two models: an XGBoost classifier (Pick-Em, 63.7% on 2024) and a Ridge regression spread model (MAE 10.68). Predictions are served via FastAPI and displayed in a React dashboard with weekly picks, season accuracy tracking, experiment comparison, and prediction history. Automated weekly refresh pipeline deployed via Docker Compose at nostradamus.silverreyes.net.
+An end-to-end NFL game outcome prediction system. Ingests 20 seasons of play-by-play data, engineers leakage-safe features, and runs two models: an XGBoost classifier (Pick-Em, 63.7% on 2024) and a Ridge regression spread model (MAE 10.68). Predictions are served via FastAPI and displayed in a React dashboard styled with the silverreyes.net design system (amber palette, Syne + IBM Plex Mono typography). Features a landing page at `/`, weekly picks, season accuracy tracking, experiment comparison, and prediction history. Automated weekly refresh pipeline deployed via Docker Compose at nostradamus.silverreyes.net.
 
 ## Core Value
 
@@ -25,18 +25,20 @@ Pre-game win/loss and point spread predictions that beat trivial baselines, with
 - Weekly pipeline spread inference (non-fatal step 5) with historical seed script -- v1.1
 - Spread experiment logging to spread_experiments.jsonl (append-only) -- v1.1
 - Season selector on Accuracy page with info tooltips on all cards -- v1.1
+- silverreyes.net design system: amber palette, Syne + IBM Plex Mono fonts, semantic color tokens across all components -- v1.2
+- Landing page at `/` with hero, how-it-works, explore CTAs, and footer -- v1.2
+- Two-branch route structure: LandingLayout (full-width) and AppLayout (sidebar) -- v1.2
+- Experiment table column alignment and full hypothesis text display -- v1.2
 
 ### Active
 
-**Current Milestone: v1.2 Design & Landing Page**
+**Next Milestone: v1.3 (not yet planned)**
 
-**Goal:** Align Nostradamus dashboard with silverreyes.net design system, add a proper landing page, and redesign the experiments view.
-
-**Target features:**
-- Design system alignment with silverreyes.net (palette, typography, visual language)
-- Home/landing page with hero, how-it-works, explore CTAs, and image placeholders
-- Experiments page redesign with full descriptions, proper column alignment
-- Off-season-aware default routing (Home instead of empty This Week)
+Candidates from backlog:
+- Over/under total points model (OU-01, OU-02)
+- Hybrid experiment layout with visual kept/reverted distinction (EXPR-03, EXPR-04)
+- Light mode toggle (DSGN-05)
+- Grid backgrounds and decorative elements (DSGN-06)
 
 ### Out of Scope
 
@@ -51,10 +53,11 @@ Pre-game win/loss and point spread predictions that beat trivial baselines, with
 
 ## Context
 
-Shipped v1.1 with ~15,000 LOC (Python + TypeScript + SQL).
+Shipped v1.2 with ~22,000 LOC (Python + TypeScript + SQL + CSS).
 Tech stack: Python 3.11, PostgreSQL, nflreadpy, pandas, XGBoost, scikit-learn (Ridge), FastAPI, React + Vite + Tailwind v4 + shadcn/ui, Docker Compose, APScheduler.
 Two models: Pick-Em classifier (Exp 5, XGBoost) and Spread model (Exp 1, Ridge regression).
-Dashboard branding uses "Pick-Em" (hyphenated) and sportsbook sign convention for spreads.
+Dashboard styled with silverreyes.net design system (amber palette, Syne + IBM Plex Mono, semantic tokens).
+Landing page at `/` serves as public-facing front door; dashboard routes under AppLayout with sidebar.
 Production: nostradamus.silverreyes.net via Caddy reverse proxy with automatic HTTPS.
 
 ## Constraints
@@ -87,7 +90,10 @@ Production: nostradamus.silverreyes.net via Caddy reverse proxy with automatic H
 | Sportsbook sign convention | Users expect negative=favorite, positive=underdog | Good -- corrected mid-v1.1 |
 | "Pick-Em" branding (hyphenated) | Avoids apostrophe encoding issues, clear to visitors | Good |
 | Over/under deferred to v1.3 | Keeps v1.2 scope focused on design refresh | -- Pending |
-| silverreyes.net design system for Nostradamus | Cohesive brand across subdomains | -- Pending |
+| silverreyes.net design system for Nostradamus | Cohesive brand across subdomains | Good -- unified amber palette + typography across all components |
+| Two-branch route layout | LandingLayout (no sidebar) vs AppLayout (sidebar) | Good -- clean separation of marketing and app |
+| Remove Collapsible for table expand/collapse | div wrappers inside tbody are invalid HTML | Good -- plain state-driven rendering is simpler and correct |
+| EXPR-03/04 deferred to v1.3 | Phase 14 focused on alignment/truncation fix only | -- Pending |
 
 ---
-*Last updated: 2026-03-24 after v1.2 milestone start*
+*Last updated: 2026-03-25 after v1.2 milestone*

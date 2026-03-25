@@ -1,5 +1,26 @@
 # Milestones
 
+## v1.2 Design & Landing Page (Shipped: 2026-03-25)
+
+**Phases:** 4 | **Plans:** 5 | **Files changed:** 59 | **LOC:** +7,530 / -1,294
+**Timeline:** 1 day (2026-03-24)
+**Git range:** feat(11-01) → feat(14-01)
+
+**Delivered:** Unified dashboard visual identity with silverreyes.net design system, added a landing page as the public-facing front door, and fixed the experiments table for readability.
+
+**Key accomplishments:**
+1. Migrated entire dashboard to silverreyes.net visual identity — amber palette (#f0a020 accent, near-black background), Syne + IBM Plex Mono self-hosted fonts, semantic color tokens
+2. Replaced all ~36 hardcoded Tailwind color classes across 14 components with semantic theme tokens (tier-high/medium/low, status-success/error/warning)
+3. Restructured routes into two layout branches — LandingLayout (full-width, no sidebar) at `/` and AppLayout (sidebar) for dashboard routes
+4. Built complete landing page with hero section, how-it-works explainer, explore CTAs, and footer with silverreyes.net branding
+5. Fixed experiment table column alignment by removing invalid Collapsible `<div>` wrappers and enabled full hypothesis text display with natural wrapping
+
+### Known Gaps (Deferred to v1.3)
+- EXPR-03: Hybrid summary+detail layout for experiments
+- EXPR-04: Visual distinction for kept vs reverted experiments beyond badge
+
+---
+
 ## v1.1 Point Spread Model (Shipped: 2026-03-24)
 
 **Phases:** 4 | **Plans:** 10 | **Files changed:** 58 | **LOC added:** ~7,000
