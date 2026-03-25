@@ -27,7 +27,7 @@ export function LandingPage() {
   return (
     <div className="mx-auto max-w-4xl px-6">
       {/* -- Section 1: Hero -- */}
-      <section className="relative flex flex-col items-center justify-center py-16 text-center">
+      <section className="relative flex flex-col items-center justify-center pt-12 pb-10 text-center">
         {/* Gradient overlay */}
         <div className="pointer-events-none absolute inset-0 bg-radial-[at_50%_65%] from-primary/8 to-transparent" />
 
@@ -35,12 +35,12 @@ export function LandingPage() {
           NFL Nostradamus
         </h1>
 
-        <p className="relative mt-8 max-w-xl text-base md:text-lg text-muted-foreground">
+        <p className="relative mt-4 max-w-xl text-base md:text-lg text-muted-foreground">
           20 seasons of play-by-play data. 17 engineered features. One question:
           who wins Sunday?
         </p>
 
-        <p className="relative mt-8 text-5xl md:text-7xl font-bold text-primary font-display leading-none">
+        <p className="relative mt-6 text-5xl md:text-7xl font-bold text-primary font-display leading-none">
           62.9%
         </p>
 
