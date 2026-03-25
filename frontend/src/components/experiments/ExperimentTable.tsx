@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import {
   Table,
@@ -9,11 +9,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { ExperimentDetail } from "@/components/experiments/ExperimentDetail";
 import type { ExperimentResponse } from "@/lib/types";
 
@@ -79,27 +74,20 @@ export function ExperimentTable({ experiments }: ExperimentTableProps) {
       </TableHeader>
       <TableBody>
         {sorted.map((exp) => (
-          <Collapsible
-            key={exp.experiment_id}
-            open={expandedId === exp.experiment_id}
-            onOpenChange={(open) =>
-              setExpandedId(open ? exp.experiment_id : null)
-            }
-          >
-            <CollapsibleTrigger
-              render={
-                <TableRow className="hover:bg-secondary/50 cursor-pointer transition-colors" />
+          <Fragment key={exp.experiment_id}>
+            <TableRow
+              className="hover:bg-secondary/50 cursor-pointer transition-colors"
+              onClick={() =>
+                setExpandedId(
+                  expandedId === exp.experiment_id ? null : exp.experiment_id
+                )
               }
             >
               <TableCell className="font-mono text-xs">
                 {exp.experiment_id}
               </TableCell>
-              <TableCell>
-                <span className="truncate max-w-[300px] block">
-                  {exp.hypothesis.length > 60
-                    ? exp.hypothesis.slice(0, 60) + "..."
-                    : exp.hypothesis}
-                </span>
+              <TableCell className="whitespace-normal">
+                {exp.hypothesis}
               </TableCell>
               <TableCell>
                 {(exp.val_accuracy_2023 * 100).toFixed(1)}%
@@ -122,15 +110,15 @@ export function ExperimentTable({ experiments }: ExperimentTableProps) {
                   </Badge>
                 )}
               </TableCell>
-            </CollapsibleTrigger>
-            <CollapsibleContent
-              render={<TableRow className="bg-background/50" />}
-            >
-              <TableCell colSpan={7} className="p-0">
-                <ExperimentDetail experiment={exp} />
-              </TableCell>
-            </CollapsibleContent>
-          </Collapsible>
+            </TableRow>
+            {expandedId === exp.experiment_id && (
+              <TableRow className="bg-background/50">
+                <TableCell colSpan={7} className="p-0">
+                  <ExperimentDetail experiment={exp} />
+                </TableCell>
+              </TableRow>
+            )}
+          </Fragment>
         ))}
       </TableBody>
     </Table>
