@@ -32,8 +32,8 @@ Requirements for Design & Landing Page milestone. Each maps to roadmap phases.
 
 ### Experiments Redesign
 
-- [ ] **EXPR-01**: Experiment table columns align properly with their data (fix current misalignment)
-- [ ] **EXPR-02**: Each experiment displays a full title (not truncated) and a layman-friendly explanation of what was tested, while preserving technical detail (parameters, features, SHAP)
+- [x] **EXPR-01**: Experiment table columns align properly with their data (fix current misalignment)
+- [x] **EXPR-02**: Each experiment displays a full title (not truncated) and a layman-friendly explanation of what was tested, while preserving technical detail (parameters, features, SHAP)
 - [ ] **EXPR-03**: Experiments use a hybrid layout: sortable summary row with expandable detail panel per experiment
 - [ ] **EXPR-04**: Kept vs reverted experiments are visually distinguishable beyond just the badge (e.g., accent border or background treatment)
 
@@ -80,8 +80,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | LAND-05 | Phase 13 | Complete |
 | LAND-06 | Phase 13 | Complete |
 | LAND-07 | Phase 13 | Complete |
-| EXPR-01 | Phase 14 | Pending |
-| EXPR-02 | Phase 14 | Pending |
+| EXPR-01 | Phase 14 | Complete |
+| EXPR-02 | Phase 14 | Complete |
 | EXPR-03 | Phase 14 | Pending |
 | EXPR-04 | Phase 14 | Pending |
 

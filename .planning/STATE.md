@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Design & Landing Page
 status: completed
-stopped_at: Phase 14 context gathered
-last_updated: "2026-03-25T02:20:39.762Z"
-last_activity: 2026-03-24 -- Phase 13 Plan 01 executed (landing page content)
+stopped_at: Completed 14-01-PLAN.md -- v1.2 milestone complete
+last_updated: "2026-03-25T02:50:23.729Z"
+last_activity: 2026-03-24 -- Phase 14 Plan 01 executed (experiments table fix)
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 4
-  completed_plans: 4
+  completed_phases: 4
+  total_plans: 5
+  completed_plans: 5
 ---
 
 # Project State
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-24)
 
 **Core value:** Pre-game win/loss and point spread predictions that beat trivial baselines, with a polished dashboard for tracking accuracy over time.
-**Current focus:** Phase 13 - Landing Page (v1.2)
+**Current focus:** v1.2 milestone complete
 
 ## Current Position
 
-Phase: 13 of 14 (Landing Page)
+Phase: 14 of 14 (Experiments Redesign)
 Plan: 1 of 1 in current phase (COMPLETE)
-Status: Phase 13 complete
-Last activity: 2026-03-24 -- Phase 13 Plan 01 executed (landing page content)
+Status: v1.2 milestone complete
+Last activity: 2026-03-24 -- Phase 14 Plan 01 executed (experiments table fix)
 
-Progress (v1.2): [===============_____] 75% (3/4 phases)
+Progress (v1.2): [====================] 100% (4/4 phases)
 
 ## Accumulated Context
 
@@ -48,6 +48,8 @@ Recent decisions affecting current work:
 - [Phase 13]: Single-file landing page component with inline blocks array -- no sub-components for static content
 - [Phase 13]: Plain divs with bg-secondary/50 for How It Works cards instead of shadcn Card component
 - [Phase 13]: Banner image via Vite static import with hard build failure if missing
+- [Phase 14]: Removed Collapsible component entirely -- div wrappers inside tbody are fundamentally invalid HTML
+- [Phase 14]: Fragment + conditional rendering for table expand/collapse instead of third-party collapsible abstraction
 
 ### Pending Todos
 
@@ -60,6 +62,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-25T02:20:39.759Z
-Stopped at: Phase 14 context gathered
-Resume file: .planning/phases/14-experiments-redesign/14-CONTEXT.md
+Last session: 2026-03-25T02:50:00.000Z
+Stopped at: Completed 14-01-PLAN.md -- v1.2 milestone complete
+Resume file: .planning/phases/14-experiments-redesign/14-01-SUMMARY.md
