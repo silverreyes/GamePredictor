@@ -124,4 +124,4 @@ Note: Phases 13 and 14 are independent and could execute in either order once 11
 | 11. Design System Foundation | v1.2 | 2/2 | Complete | 2026-03-24 |
 | 12. Route Restructure and Navigation | v1.2 | 1/1 | Complete | 2026-03-24 |
 | 13. Landing Page | v1.2 | 1/1 | Complete | 2026-03-24 |
-| 14. Experiments Redesign | v1.2 | 1/1 | Complete | 2026-03-25 |
+| 14. Experiments Redesign | v1.2 | Complete    | 2026-03-25 | 2026-03-25 |

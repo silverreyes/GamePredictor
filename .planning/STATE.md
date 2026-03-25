@@ -4,7 +4,7 @@ milestone: v1.2
 milestone_name: Design & Landing Page
 status: completed
 stopped_at: Completed 14-01-PLAN.md -- v1.2 milestone complete
-last_updated: "2026-03-25T02:50:23.729Z"
+last_updated: "2026-03-25T03:00:01.547Z"
 last_activity: 2026-03-24 -- Phase 14 Plan 01 executed (experiments table fix)
 progress:
   total_phases: 4
