@@ -15,4 +15,4 @@ jobs:
         run: |
           git clone --mirror https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/NatoJenkins/GamePredictor.git repo
           cd repo
-          git push https://x-access-token:${PROFESSIONAL_GITHUB_TOKEN}@github.com/silverreyes/GB-Golf-Optimizer.git --mirror
+          git push https://x-access-token:${PROFESSIONAL_GITHUB_TOKEN}@github.com/silverreyes/GamePredictor.git --mirror
