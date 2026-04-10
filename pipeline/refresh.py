@@ -1,4 +1,5 @@
 """Weekly pipeline: ingest -> features -> retrain -> predict."""
+import gc
 import json
 import logging
 import os
@@ -120,13 +121,45 @@ def ingest_new_data(engine):
 
 
 def recompute_features(engine):
-    """Step 2: Recompute features for all seasons."""
+    """Step 2: Recompute features, one season at a time.
+
+    Chunked by season to bound peak memory (BUG-001): previously loaded 20
+    seasons of raw PBP into pandas in one pass and OOM-killed the worker.
+    Each season is built, stored, then released before the next begins.
+    """
     from features.build import build_game_features, store_game_features
 
-    logger.info("Building game features for all seasons...")
-    df = build_game_features()
-    n = store_game_features(df)
-    logger.info("Stored %d feature rows", n)
+    seasons_df = pd.read_sql(
+        "SELECT DISTINCT season FROM schedules WHERE game_type = 'REG' ORDER BY season",
+        engine,
+    )
+    seasons = [int(s) for s in seasons_df["season"].tolist()]
+    if not seasons:
+        logger.info("No seasons found in schedules -- skipping feature rebuild")
+        return
+
+    total = 0
+    for season in seasons:
+        logger.info("Building game features for season %d...", season)
+        df = build_game_features(seasons=[season])
+        n = store_game_features(df)
+        total += n
+        logger.info("Stored %d feature rows for season %d", n, season)
+        del df
+        gc.collect()
+
+    logger.info("Stored %d feature rows across %d seasons", total, len(seasons))
+
+
+def _load_features_from_db(engine) -> pd.DataFrame:
+    """Load the game_features matrix from Postgres.
+
+    Used by retrain_and_stage instead of rebuilding from raw PBP cache
+    (BUG-001): the raw rebuild loads 20 seasons of PBP and peaks at ~2x
+    final size during downcast, causing OOM. The stored feature matrix is
+    ~5k rows and fits trivially in memory.
+    """
+    return pd.read_sql("SELECT * FROM game_features ORDER BY season, week", engine)
 
 
 def retrain_and_stage(engine, experiments_path, model_dir):
@@ -137,7 +170,6 @@ def retrain_and_stage(engine, experiments_path, model_dir):
 
     Non-fatal: if this step fails, run_pipeline continues to step 4.
     """
-    from features.build import build_game_features
     from models.baselines import compute_baselines
     from models.train import (
         DEFAULT_PARAMS,
@@ -149,9 +181,9 @@ def retrain_and_stage(engine, experiments_path, model_dir):
     )
     from features.definitions import TARGET
 
-    # Load feature matrix and split
-    logger.info("Loading feature matrix for retraining...")
-    df = build_game_features()
+    # Load feature matrix from DB (populated by recompute_features in step 2)
+    logger.info("Loading feature matrix from game_features table for retraining...")
+    df = _load_features_from_db(engine)
     train, val_2023, val_2022, val_2021, feature_cols = load_and_split(df)
 
     # Determine experiment ID from existing experiments

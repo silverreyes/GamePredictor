@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
+    mem_limit: 2g
     environment:
       POSTGRES_DB: nflpredictor
       POSTGRES_USER: nfl
@@ -16,6 +17,7 @@ services:
 
   api:
     build: .
+    mem_limit: 1g
     command: ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
       DATABASE_URL: postgresql+psycopg://nfl:${POSTGRES_PASSWORD:-nfldev}@postgres:5432/nflpredictor
@@ -38,6 +40,7 @@ services:
 
   worker:
     build: .
+    mem_limit: 4g
     command: ["python", "-m", "pipeline.worker"]
     environment:
       DATABASE_URL: postgresql+psycopg://nfl:${POSTGRES_PASSWORD:-nfldev}@postgres:5432/nflpredictor
@@ -56,6 +59,7 @@ services:
     build:
       context: .
       dockerfile: docker/nginx.Dockerfile
+    mem_limit: 128m
     ports:
       - "8080:80"
     depends_on:

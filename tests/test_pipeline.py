@@ -150,21 +150,80 @@ def test_ingest_offseason_skips(mock_read_sql):
 
 
 # ---------------------------------------------------------------------------
-# Test: recompute_features calls build and store
+# Test: recompute_features chunks by season (BUG-001)
 # ---------------------------------------------------------------------------
-def test_recompute_features_calls_build_and_store():
-    """Mocks build_game_features and store_game_features. Verifies both called."""
+def test_recompute_features_chunks_by_season():
+    """Verifies recompute_features processes each season independently.
+
+    Regression test for BUG-001: the old implementation loaded all 20 seasons
+    of raw PBP at once and OOM-killed the worker. The new implementation
+    queries distinct seasons and calls build/store once per season.
+    """
     from pipeline.refresh import recompute_features
 
     engine = MagicMock()
+    seasons_df = pd.DataFrame({"season": [2022, 2023, 2024]})
     mock_df = pd.DataFrame({"a": [1, 2]})
 
-    with patch("features.build.build_game_features", return_value=mock_df) as mock_build:
-        with patch("features.build.store_game_features", return_value=2) as mock_store:
-            recompute_features(engine)
+    with patch("pipeline.refresh.pd.read_sql", return_value=seasons_df):
+        with patch("features.build.build_game_features", return_value=mock_df) as mock_build:
+            with patch("features.build.store_game_features", return_value=2) as mock_store:
+                recompute_features(engine)
 
-            mock_build.assert_called_once()
-            mock_store.assert_called_once_with(mock_df)
+    # One build + store call per season, with that season in the seasons kwarg
+    assert mock_build.call_count == 3
+    assert mock_store.call_count == 3
+    called_seasons = [c.kwargs["seasons"] for c in mock_build.call_args_list]
+    assert called_seasons == [[2022], [2023], [2024]]
+
+
+def test_recompute_features_empty_seasons():
+    """If schedules is empty, recompute_features should no-op, not crash."""
+    from pipeline.refresh import recompute_features
+
+    engine = MagicMock()
+    with patch("pipeline.refresh.pd.read_sql", return_value=pd.DataFrame({"season": []})):
+        with patch("features.build.build_game_features") as mock_build:
+            recompute_features(engine)
+            mock_build.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Test: retrain_and_stage loads features from DB (BUG-001)
+# ---------------------------------------------------------------------------
+def test_retrain_loads_features_from_db(tmp_path):
+    """retrain_and_stage must load from game_features table, not rebuild from PBP.
+
+    Regression for BUG-001: rebuilding from PBP cache duplicates the OOM risk.
+    The stored feature matrix is what training should consume.
+    """
+    from pipeline.refresh import retrain_and_stage
+
+    engine = MagicMock()
+    feature_df = pd.DataFrame({
+        "game_id": ["g1"], "season": [2023], "week": [1],
+        "home_team": ["KC"], "away_team": ["BUF"], "home_win": [1],
+        "home_rest": [7],
+    })
+
+    with patch("pipeline.refresh._load_features_from_db", return_value=feature_df) as mock_load:
+        with patch("models.train.load_and_split", return_value=(
+            feature_df, feature_df, feature_df, feature_df, ["home_rest"],
+        )):
+            with patch("models.train.train_and_evaluate", return_value=(
+                {"val_accuracy_2023": 0.6, "val_accuracy_2022": 0.6,
+                 "val_accuracy_2021": 0.6, "log_loss": 0.5, "brier_score": 0.2,
+                 "shap_top5": []},
+                MagicMock(),
+            )):
+                with patch("models.baselines.compute_baselines", return_value={
+                    "always_home_accuracy": 0.55, "better_record_accuracy": 0.58,
+                }):
+                    with patch("models.train.save_best_model", return_value="/m.json"):
+                        with patch("models.train.log_experiment"):
+                            retrain_and_stage(engine, str(tmp_path / "exp.jsonl"), str(tmp_path))
+
+    mock_load.assert_called_once_with(engine)
 
 
 # ---------------------------------------------------------------------------
